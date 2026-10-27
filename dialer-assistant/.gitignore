@@ -1,0 +1,4 @@
+# Never commit shareholder data
+*.xlsx
+*.xls
+*.csv

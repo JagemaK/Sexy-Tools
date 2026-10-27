@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Dialer Assistant Settings</title>
+  <style>
+    body { font-family: Segoe UI, Arial, sans-serif; font-size: 14px; color: #1f2937; background: #f8fafc;
+           max-width: 640px; margin: 24px auto; padding: 0 16px; }
+    h1 { font-size: 20px; }
+    section { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    h2 { font-size: 15px; margin: 0 0 10px; }
+    label { display: block; margin: 10px 0 4px; font-weight: 600; }
+    input[type=text], input[type=number], textarea { width: 100%; padding: 7px 9px; border: 1px solid #cbd5e1;
+           border-radius: 5px; font: inherit; box-sizing: border-box; }
+    textarea { height: 70px; }
+    button { padding: 7px 14px; border: 0; border-radius: 5px; background: #2563eb; color: #fff; cursor: pointer; font: inherit; margin-top: 10px; }
+    .muted { color: #64748b; font-size: 13px; }
+    #importStatus, #saved, #testOut { margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Dialer Assistant</h1>
+
+  <section>
+    <h2>Cellphone → control number data</h2>
+    <p class="muted">Import the NEOS cellphones workbook (.xlsx) or a CSV with columns
+      <code>ctrl</code>, <code>CC Cell</code>, <code>REG CELL</code>. The data stays in this browser only.
+      Re-importing replaces the previous data.</p>
+    <input type="file" id="file" accept=".xlsx,.xls,.csv">
+    <div id="importStatus" class="muted"></div>
+    <label for="testPhone">Test lookup</label>
+    <input type="text" id="testPhone" placeholder="Phone number">
+    <button id="test">Look up</button>
+    <div id="testOut" class="muted"></div>
+  </section>
+
+  <section>
+    <h2>Automation</h2>
+    <label for="dispositions">Dispositions to save, in order (one per line)</label>
+    <textarea id="dispositions"></textarea>
+    <p class="muted">Each line = one pass (search → select → finish → disposition → save).
+      A final pass then stops on the disposition page for the agent. Text must match the disposition name on the page.</p>
+    <label for="searchPath">Search page path</label>
+    <input type="text" id="searchPath">
+    <label for="timeoutMs">Wait timeout per step (ms)</label>
+    <input type="number" id="timeoutMs">
+    <label for="afterSaveMs">Pause after Save (ms)</label>
+    <input type="number" id="afterSaveMs">
+    <button id="save">Save settings</button>
+    <div id="saved" class="muted"></div>
+  </section>
+
+  <script src="lib/xlsx.full.min.js"></script>
+  <script src="common.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Dialer Assistant",
+  "version": "1.0.0",
+  "description": "Phone -> control number lookup and automated dispositions for the Alliance dialer.",
+  "permissions": ["storage", "unlimitedStorage", "clipboardWrite"],
+  "host_permissions": [
+    "http://69.10.47.54/*",
+    "https://69.10.47.54/*",
+    "http://proxy2.alliancedialer.com/*",
+    "https://proxy2.alliancedialer.com/*"
+  ],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_title": "Dialer Assistant (toggle panel)" },
+  "options_page": "options.html",
+  "icons": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://69.10.47.54/*",
+        "https://69.10.47.54/*",
+        "http://proxy2.alliancedialer.com/*",
+        "https://proxy2.alliancedialer.com/*"
+      ],
+      "js": ["page-hooks.js"],
+      "world": "MAIN",
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": [
+        "http://69.10.47.54/*",
+        "https://69.10.47.54/*",
+        "http://proxy2.alliancedialer.com/*",
+        "https://proxy2.alliancedialer.com/*"
+      ],
+      "js": ["common.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
