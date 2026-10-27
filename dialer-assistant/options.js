@@ -8,8 +8,11 @@ async function loadSettings() {
   $('afterSaveMs').value = s.afterSaveMs;
   const { importInfo } = await chrome.storage.local.get('importInfo');
   if (importInfo) {
+    const n = v => (v || 0).toLocaleString();
     $('importStatus').textContent =
-      `Loaded ${importInfo.phones.toLocaleString()} phone numbers from ${importInfo.file} (${new Date(importInfo.at).toLocaleString()}).`;
+      `Loaded ${importInfo.file} (${new Date(importInfo.at).toLocaleString()}): ${n(importInfo.rows)} rows → ` +
+      `${n(importInfo.phones)} unique phones with ${n(importInfo.links)} control numbers` +
+      (importInfo.nameOnly ? `, plus ${n(importInfo.nameOnly)} phones with a name only (no control #).` : '.');
   } else {
     $('importStatus').textContent = 'No data imported yet.';
   }
@@ -28,8 +31,9 @@ $('save').onclick = async () => {
 };
 
 $('test').onclick = async () => {
-  const ctrls = await daLookup($('testPhone').value);
-  $('testOut').textContent = ctrls.length ? ctrls.join(', ') : 'No match.';
+  const { ctrls, names } = await daLookup($('testPhone').value);
+  $('testOut').textContent = ctrls.length ? ctrls.join(', ')
+    : names.length ? `No control number; belongs to ${names.join(', ')}` : 'No match.';
 };
 
 // Pick the sheet holding the data: header row with a ctrl/control column.
@@ -46,20 +50,28 @@ function buildMap(rows) {
   const header = rows[0].map(h => String(h || '').trim());
   const ctrlCol = header.findIndex(h => /^(ctrl|control)/i.test(h));
   const phoneCols = header.map((h, i) => (/cell|phone/i.test(h) ? i : -1)).filter(i => i >= 0);
+  // phone -> { c: [control numbers], n: [names from rows without a control number] }
   const map = new Map();
+  const stats = { rows: rows.length - 1, links: 0, nameRows: 0 };
   for (let r = 1; r < rows.length; r++) {
     const row = rows[r];
-    const ctrl = daNormalizeCtrl(row[ctrlCol]);
-    if (!ctrl) continue;
+    const raw = row[ctrlCol];
+    const ctrl = daNormalizeCtrl(raw);
+    const name = !ctrl && typeof raw === 'string' && /[a-z]/i.test(raw) ? raw.trim().replace(/\s+/g, ' ') : '';
+    if (!ctrl && !name) continue;
+    if (name) stats.nameRows++;
     for (const c of phoneCols) {
       const p = daNormalizePhone(row[c]);
       if (!p) continue;
-      let list = map.get(p);
-      if (!list) map.set(p, (list = []));
-      if (!list.includes(ctrl)) list.push(ctrl);
+      let e = map.get(p);
+      if (!e) map.set(p, (e = { c: [], n: [] }));
+      if (ctrl && !e.c.includes(ctrl)) { e.c.push(ctrl); stats.links++; }
+      if (name && !e.n.some(x => x.toLowerCase() === name.toLowerCase())) e.n.push(name);
     }
   }
-  return map;
+  stats.phones = [...map.values()].filter(e => e.c.length).length;
+  stats.nameOnly = map.size - stats.phones;
+  return { map, stats };
 }
 
 async function writeMap(map) {
@@ -76,7 +88,7 @@ async function writeMap(map) {
     await new Promise((res, rej) => {
       const tx = db.transaction(DA_STORE, 'readwrite');
       const st = tx.objectStore(DA_STORE);
-      for (const [p, c] of entries.slice(i, i + BATCH)) st.put({ p, c });
+      for (const [p, e] of entries.slice(i, i + BATCH)) st.put({ p, c: e.c, n: e.n });
       tx.oncomplete = res;
       tx.onerror = () => rej(tx.error);
     });
@@ -96,9 +108,9 @@ $('file').onchange = async e => {
     const rows = findDataSheet(wb);
     if (!rows) throw new Error('No sheet with a "ctrl" header column found.');
     status.textContent = `Parsing ${rows.length.toLocaleString()} rows...`;
-    const map = buildMap(rows);
+    const { map, stats } = buildMap(rows);
     await writeMap(map);
-    await chrome.storage.local.set({ importInfo: { file: file.name, phones: map.size, at: Date.now() } });
+    await chrome.storage.local.set({ importInfo: { file: file.name, at: Date.now(), ...stats } });
     await loadSettings();
   } catch (err) {
     status.textContent = `Import failed: ${err.message}`;

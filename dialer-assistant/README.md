@@ -10,15 +10,23 @@ passes on `proxy2.alliancedialer.com` / `69.10.47.54`.
    and import `NEOS_Cellphones.xlsx`. It is a one-time import (about 30–60 s), and the data stays in the browser.
 
 ## Use
-A **Dialer Assistant** panel appears in the bottom-right of the dialer pages (click its header or the toolbar icon to collapse it).
+A **Dialer Assistant** panel floats over the dialer pages.
 
-1. Type the caller's phone number and click **Find**. You'll see the control number(s) with **Copy** and **Run** buttons.
-   With one match, it is copied automatically. If the file has no match, use **Search site by phone**.
-2. **Run** does this:
+- **Move it** by dragging the blue header. **Resize it** from any edge or corner. Double-click an edge to go back to automatic height.
+  The position and size are remembered across tabs and reloads.
+- **Minimize** it with the – button, by double-clicking the header, or with the toolbar icon. **Alt+Shift+F** focuses the phone box.
+
+1. Paste the caller's phone number (it looks it up right away) or type it and press Enter.
+   Every matching control number is shown as a card with **Copy** and **Run**. Click a number to copy it. With one match, it's copied automatically.
+   The last 5 numbers you looked up appear as chips under the box.
+2. If the file has no control number for that phone:
+   - If the file has the owner's **name** for that phone, click **Search site for "NAME"**. That fills First/Last Name on the search page.
+   - Otherwise, use **Search site by phone**.
+3. **Run** shows a live checklist while it works:
    - search control # → Select → Finish → disposition **Shareholder called in** → Save
    - search again → Select → Finish → disposition **Endeavor letter** → Save
    - search again → Select → Finish → **stops on the disposition page** for the agent.
-3. **Stop** halts the run at any point. If a step can't find something within 20 s, the run stops and the panel names the missing item.
+4. **Stop** halts a run. If a step can't find something within 20 s, the run stops and the panel names the missing item.
 
 The disposition names, the search path, and the timeouts can all be changed in Settings.
 Disposition text has to match the name on the page (case and punctuation are ignored).

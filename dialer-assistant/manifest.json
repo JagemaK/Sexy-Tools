@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Dialer Assistant",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Phone -> control number lookup and automated dispositions for the Alliance dialer.",
   "permissions": ["storage", "unlimitedStorage", "clipboardWrite"],
   "host_permissions": [
@@ -13,6 +13,12 @@
   "background": { "service_worker": "background.js" },
   "action": { "default_title": "Dialer Assistant (toggle panel)" },
   "options_page": "options.html",
+  "commands": {
+    "focus-phone": {
+      "suggested_key": { "default": "Alt+Shift+F" },
+      "description": "Focus the caller phone box"
+    }
+  },
   "icons": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
   "content_scripts": [
     {

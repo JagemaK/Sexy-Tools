@@ -49,14 +49,19 @@ function daOpenDb() {
   });
 }
 
+// -> { ctrls: [...], names: [...] }. names come from rows whose ctrl cell holds
+// a person's name instead of a number (phone known, control number not).
 async function daLookup(phone) {
   const p = daNormalizePhone(phone);
-  if (!p) return [];
+  if (!p) return { ctrls: [], names: [] };
   const db = await daOpenDb();
   return new Promise((resolve, reject) => {
     const req = db.transaction(DA_STORE).objectStore(DA_STORE).get(p);
     // Normalize again so data imported before the zero-padding fix is still right.
-    req.onsuccess = () => resolve(req.result ? [...new Set(req.result.c.map(daNormalizeCtrl))] : []);
+    req.onsuccess = () => {
+      const r = req.result;
+      resolve({ ctrls: r ? [...new Set(r.c.map(daNormalizeCtrl))].filter(Boolean) : [], names: (r && r.n) || [] });
+    };
     req.onerror = () => reject(req.error);
   });
 }
