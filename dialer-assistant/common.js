@@ -25,9 +25,15 @@ function daNormalizePhone(v) {
   return d;
 }
 
+// Control numbers are 10 digits; Excel stores them as numbers and drops the
+// leading zero (0499956773 -> 499956773), so pad it back. Text with letters
+// (some rows hold a name in the ctrl column) is not a control number.
 function daNormalizeCtrl(v) {
   if (v === null || v === undefined) return '';
-  return String(typeof v === 'number' ? Math.round(v) : v).replace(/\D/g, '');
+  const s = String(typeof v === 'number' ? Math.round(v) : v).trim();
+  if (/[a-z]/i.test(s)) return '';
+  const d = s.replace(/\D/g, '');
+  return d ? d.padStart(10, '0') : '';
 }
 
 // ---- IndexedDB (extension origin): phone -> [control numbers] ----
@@ -49,7 +55,8 @@ async function daLookup(phone) {
   const db = await daOpenDb();
   return new Promise((resolve, reject) => {
     const req = db.transaction(DA_STORE).objectStore(DA_STORE).get(p);
-    req.onsuccess = () => resolve(req.result ? req.result.c : []);
+    // Normalize again so data imported before the zero-padding fix is still right.
+    req.onsuccess = () => resolve(req.result ? [...new Set(req.result.c.map(daNormalizeCtrl))] : []);
     req.onerror = () => reject(req.error);
   });
 }
