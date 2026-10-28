@@ -7,8 +7,21 @@ const DA_DEFAULTS = {
   searchPath: '/members/search',
   timeoutMs: 20000,
   // Pause after clicking Save before going back to search.
-  afterSaveMs: 1500
+  afterSaveMs: 1500,
+  // Zoiper hand-off: start the run by itself when the caller's phone matches
+  // exactly one control number.
+  autoRunOnCall: false
 };
+
+// Caller ID from a softphone may look like "sip:+12025551234@10.0.0.5" or
+// "\"John\" <2025551234>": keep only the user part before '@'.
+function daCallerIdToPhone(raw) {
+  let s = String(raw || '').trim();
+  const angle = s.match(/<([^>]*)>/);
+  if (angle) s = angle[1];
+  s = s.replace(/^sips?:/i, '').split('@')[0];
+  return daNormalizePhone(s);
+}
 
 async function daGetSettings() {
   const s = await chrome.storage.local.get('settings');

@@ -35,6 +35,19 @@
   </section>
 
   <section>
+    <h2>Zoiper: look up the caller automatically</h2>
+    <p class="muted">In Zoiper: <b>Settings → Automation → Add rule</b> (or, with <i>Show advanced options</i> on,
+      <b>General → Call events → Open URL on: incoming call answer</b>). Set the action to <b>Open URL</b> and paste this,
+      replacing <code>CALLER</code> with Zoiper's caller-number variable (for example <code>$(CALLERNUMBER)</code>):</p>
+    <input type="text" id="zoiperUrl" readonly>
+    <p class="muted">Zoiper opens that address in your default browser (make Edge the default). The extension sends the number
+      to your open dialer tab, closes the extra tab and shows the control number.</p>
+    <label for="simPhone">Simulate a call</label>
+    <input type="text" id="simPhone" placeholder="Phone number">
+    <button id="sim">Simulate</button>
+  </section>
+
+  <section>
     <h2>Automation</h2>
     <label for="dispositions">Dispositions to save, in order (one per line)</label>
     <textarea id="dispositions"></textarea>
@@ -46,6 +59,7 @@
     <input type="number" id="timeoutMs">
     <label for="afterSaveMs">Pause after Save (ms)</label>
     <input type="number" id="afterSaveMs">
+    <label><input type="checkbox" id="autoRunOnCall"> Start the run by itself when a Zoiper call matches exactly one control number</label>
     <button id="save">Save settings</button>
     <div id="saved" class="muted"></div>
   </section>

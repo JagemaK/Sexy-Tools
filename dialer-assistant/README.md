@@ -28,6 +28,24 @@ A **Dialer Assistant** panel floats over the dialer pages.
    - search again → Select → Finish → **stops on the disposition page** for the agent.
 4. **Stop** halts a run. If a step can't find something within 20 s, the run stops and the panel names the missing item.
 
+## Zoiper 5: look up the caller automatically
+Zoiper can open a web address when a call comes in. The extension uses that to receive the caller's number with no copy/paste.
+
+1. Make **Edge** your default browser (Zoiper opens addresses in the default browser).
+2. In Zoiper, open **Settings → Automation → Add rule**. Older builds have this under
+   **Settings → (Show advanced options) → General → Call events → "Open URL on"**.
+   Set the event to the incoming call (answered) and the action to **Open URL**, using:
+   `http://proxy2.alliancedialer.com/members/search#da-phone=CALLER`
+   Replace `CALLER` with Zoiper's caller-number variable from the rule's variable list
+   (Zoiper for Business documents it as `$(CALLERNUMBER)`).
+3. On a call, Zoiper opens that address. The extension sends the number to the dialer tab you already have open,
+   brings that tab to the front, closes the extra tab and shows the control number(s).
+   The number can come in any form (`+1…`, `sip:…@host`).
+4. Optional: in Settings, tick **Start the run by itself…** to run the disposition passes automatically
+   when the caller matches exactly one control number.
+
+Settings has a **Simulate a call** box to test this without Zoiper.
+
 The disposition names, the search path, and the timeouts can all be changed in Settings.
 Disposition text has to match the name on the page (case and punctuation are ignored).
 

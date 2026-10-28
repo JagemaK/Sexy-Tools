@@ -809,7 +809,32 @@
       : '<span class="warn">No cellphone data imported yet</span>';
   }
 
+  // ---------- Zoiper hand-off ----------
+  // Zoiper opens  <dialer>/members/search#da-phone=<caller number>  on a call.
+  async function incomingCall(phone) {
+    if (!phone) return;
+    if (loadUi().collapsed) setCollapsed(false);
+    els.phone.value = phone;
+    await doLookup();
+    toast('Incoming call: ' + fmtPhone(phone));
+    const ui = loadUi();
+    const job = loadJob();
+    if (settings.autoRunOnCall && ui.results && ui.results.length === 1 && !(job && job.running)) {
+      startRun(ui.results[0].ctrl);
+    }
+  }
+
+  async function checkCallHash() {
+    const m = location.hash.match(/da-phone=([^&]*)/);
+    if (!m) return;
+    const phone = daCallerIdToPhone(decodeURIComponent(m[1]));
+    history.replaceState(null, '', location.pathname + location.search);
+    const res = await chrome.runtime.sendMessage({ type: 'incomingCall', phone });
+    if (res && res.handleHere) incomingCall(phone);
+  }
+
   chrome.runtime.onMessage.addListener(msg => {
+    if (msg.type === 'incomingCall') incomingCall(msg.phone);
     if (msg.type === 'togglePanel') setCollapsed(!loadUi().collapsed);
     if (msg.type === 'focusPhone') {
       if (loadUi().collapsed) setCollapsed(false);
@@ -822,5 +847,7 @@
     settings = s;
     buildPanel();
     runner();
+    checkCallHash();
+    window.addEventListener('hashchange', checkCallHash);
   });
 })();

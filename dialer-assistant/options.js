@@ -6,6 +6,7 @@ async function loadSettings() {
   $('searchPath').value = s.searchPath;
   $('timeoutMs').value = s.timeoutMs;
   $('afterSaveMs').value = s.afterSaveMs;
+  $('autoRunOnCall').checked = !!s.autoRunOnCall;
   const { importInfo } = await chrome.storage.local.get('importInfo');
   if (importInfo) {
     const n = v => (v || 0).toLocaleString();
@@ -23,7 +24,8 @@ $('save').onclick = async () => {
     dispositions: $('dispositions').value.split('\n').map(s => s.trim()).filter(Boolean),
     searchPath: $('searchPath').value.trim() || DA_DEFAULTS.searchPath,
     timeoutMs: Number($('timeoutMs').value) || DA_DEFAULTS.timeoutMs,
-    afterSaveMs: Number($('afterSaveMs').value) || 0
+    afterSaveMs: Number($('afterSaveMs').value) || 0,
+    autoRunOnCall: $('autoRunOnCall').checked
   };
   await chrome.storage.local.set({ settings });
   $('saved').textContent = 'Saved.';
@@ -116,6 +118,14 @@ $('file').onchange = async e => {
     status.textContent = `Import failed: ${err.message}`;
   }
   e.target.value = '';
+};
+
+const ZOIPER_BASE = 'http://proxy2.alliancedialer.com/members/search#da-phone=';
+$('zoiperUrl').value = ZOIPER_BASE + 'CALLER';
+$('zoiperUrl').onclick = e => e.target.select();
+$('sim').onclick = () => {
+  const p = daCallerIdToPhone($('simPhone').value);
+  if (p) chrome.tabs.create({ url: ZOIPER_BASE + encodeURIComponent($('simPhone').value) });
 };
 
 loadSettings();
