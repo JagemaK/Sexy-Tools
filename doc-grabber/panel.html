@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Doc Grabber</title>
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+  <header>
+    <img src="icons/icon32.png" alt="" width="24" height="24">
+    <h1>Doc Grabber</h1>
+  </header>
+
+  <section class="card">
+    <div class="row">
+      <button id="scan" class="primary">Scan this page</button>
+      <button id="stop" hidden>Stop</button>
+    </div>
+    <details>
+      <summary>Scan options</summary>
+      <label class="check"><input type="checkbox" id="autoScroll"> Auto-scroll to load every page</label>
+      <label>Wait per scroll step (ms) <input type="number" id="delay" min="100" max="5000" step="100"></label>
+      <label>Ignore images smaller than (px) <input type="number" id="minSize" min="50" max="3000" step="50"></label>
+    </details>
+    <p id="status" class="status">Open a page with a PDF or a scanned document, then press Scan.</p>
+  </section>
+
+  <section id="pdfSection" class="card" hidden>
+    <h2>PDF files <span id="pdfCount" class="badge"></span></h2>
+    <ul id="pdfList" class="pdf-list"></ul>
+  </section>
+
+  <section id="pageSection" class="card" hidden>
+    <h2>Scanned pages <span id="pageCount" class="badge"></span></h2>
+    <div class="row small">
+      <button id="selAll">Select all</button>
+      <button id="selNone">Select none</button>
+      <span class="hint">Drag to reorder</span>
+    </div>
+    <div id="grid" class="grid"></div>
+
+    <div class="build">
+      <label>File name <input type="text" id="fileName" spellcheck="false"></label>
+      <div class="row">
+        <label>Page size
+          <select id="pageSize">
+            <option value="fit">Match image</option>
+            <option value="a4">A4</option>
+            <option value="letter">Letter</option>
+          </select>
+        </label>
+        <label>Quality
+          <select id="quality">
+            <option value="0.95">High</option>
+            <option value="0.85">Medium</option>
+            <option value="0.7">Small file</option>
+          </select>
+        </label>
+      </div>
+      <label class="check"><input type="checkbox" id="saveAs"> Ask where to save</label>
+      <button id="build" class="primary">Download as PDF</button>
+      <progress id="progress" hidden></progress>
+    </div>
+  </section>
+
+  <script src="pdf-builder.js"></script>
+  <script src="panel.js"></script>
+</body>
+</html>

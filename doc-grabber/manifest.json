@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Doc Grabber",
+  "version": "1.0.0",
+  "description": "Find PDFs and scanned document pages on any webpage and download them as one complete PDF file.",
+  "permissions": ["sidePanel", "scripting", "downloads", "activeTab", "tabs", "storage"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "background.js" },
+  "side_panel": { "default_path": "panel.html" },
+  "action": { "default_title": "Doc Grabber" },
+  "icons": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+}

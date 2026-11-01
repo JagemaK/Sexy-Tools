@@ -1,0 +1,107 @@
+:root {
+  --bg: #f6f7f9;
+  --card: #fff;
+  --text: #1d2330;
+  --muted: #667085;
+  --border: #e3e6eb;
+  --accent: #dc2626;
+  --accent-hover: #b91c1c;
+  --sel: #2563eb;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17191d;
+    --card: #22252b;
+    --text: #e8eaee;
+    --muted: #9aa1ad;
+    --border: #353943;
+    --sel: #60a5fa;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 12px;
+  font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+h1 { font-size: 16px; margin: 0; }
+h2 { font-size: 13px; margin: 0 0 8px; display: flex; align-items: center; gap: 6px; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+.row { display: flex; gap: 8px; align-items: end; flex-wrap: wrap; }
+.row.small { margin-bottom: 8px; align-items: center; }
+button {
+  font: inherit;
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+}
+button:hover { border-color: var(--muted); }
+button:disabled { opacity: .5; cursor: default; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; flex: 1; }
+button.primary:hover:not(:disabled) { background: var(--accent-hover); }
+.row.small button { padding: 3px 8px; font-size: 12px; }
+label { display: flex; flex-direction: column; gap: 3px; margin-top: 8px; color: var(--muted); font-size: 12px; flex: 1; }
+label.check { flex-direction: row; align-items: center; gap: 6px; color: var(--text); }
+input[type=text], input[type=number], select {
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 7px;
+  width: 100%;
+}
+details { margin-top: 8px; }
+summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+.status { margin: 8px 0 0; color: var(--muted); white-space: pre-line; }
+.status.error { color: var(--accent); }
+.badge { background: var(--bg); border: 1px solid var(--border); border-radius: 99px; padding: 0 7px; font-weight: 500; color: var(--muted); }
+.hint { color: var(--muted); font-size: 11px; margin-left: auto; }
+
+.pdf-list { list-style: none; margin: 0; padding: 0; }
+.pdf-list li { display: flex; gap: 8px; align-items: center; padding: 6px 0; border-top: 1px solid var(--border); }
+.pdf-list li:first-child { border-top: 0; }
+.pdf-list .meta { flex: 1; min-width: 0; }
+.pdf-list .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pdf-list .src { color: var(--muted); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+.thumb {
+  position: relative;
+  border: 2px solid var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--bg);
+  aspect-ratio: 3 / 4;
+}
+.thumb.selected { border-color: var(--sel); }
+.thumb:not(.selected) img { opacity: .35; }
+.thumb.dragging { opacity: .4; }
+.thumb.drop-target { outline: 2px dashed var(--sel); outline-offset: 2px; }
+.thumb img { width: 100%; height: 100%; object-fit: contain; display: block; pointer-events: none; }
+.thumb .num {
+  position: absolute; left: 4px; top: 4px;
+  background: rgba(0,0,0,.65); color: #fff; font-size: 11px; border-radius: 4px; padding: 0 5px;
+}
+.thumb .size {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,.55); color: #fff; font-size: 10px; text-align: center;
+}
+.thumb input { position: absolute; right: 4px; top: 4px; margin: 0; pointer-events: none; }
+
+.build { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 4px; }
+.build button.primary { width: 100%; margin-top: 10px; }
+progress { width: 100%; margin-top: 8px; }
