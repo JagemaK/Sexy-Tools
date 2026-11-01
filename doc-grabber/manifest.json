@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Jagema's Doc Grabber",
-  "version": "1.1.0",
-  "description": "Find PDFs and scanned document pages on any webpage and download them as one complete PDF file.",
+  "version": "1.2.0",
+  "description": "Find PDFs and scanned document pages on any webpage and download them as one searchable PDF (built-in OCR).",
   "permissions": [
     "sidePanel",
     "scripting",
@@ -36,5 +36,8 @@
       },
       "description": "Open Jagema's Doc Grabber"
     }
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
   }
 }

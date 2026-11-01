@@ -1,8 +1,8 @@
 const $ = (id) => document.getElementById(id);
 
 const DEFAULTS = {
-  autoScroll: true, delay: 500, minSize: 300, pageSize: 'fit', quality: '0.95', saveAs: false,
-  colorMode: 'color', enhance: false, trim: false,
+  autoScroll: true, speed: 'fast', minSize: 300, pageSize: 'fit', quality: '0.95', saveAs: false,
+  colorMode: 'color', enhance: false, trim: false, ocr: true, ocrLang: 'eng',
 };
 const SETTING_IDS = Object.keys(DEFAULTS);
 
@@ -109,14 +109,33 @@ async function scan(append) {
   const min = +$('minSize').value || DEFAULTS.minSize;
   const opts = {
     autoScroll: $('autoScroll').checked,
-    delay: +$('delay').value || DEFAULTS.delay,
+    speed: $('speed').value,
     minWidth: min, minHeight: min, quality: 0.95,
   };
   setStatus(opts.autoScroll ? 'Scanning… scrolling through the page to load every page.\nKeep this tab in front until it finishes.' : 'Scanning…');
+  const t0 = performance.now();
+  // Live progress while the page scrolls.
+  const poll = setInterval(async () => {
+    try {
+      const res = await chrome.scripting.executeScript({
+        target: { tabId: tab.id, allFrames: true },
+        func: () => window.__docGrabber && window.__docGrabber.progress(),
+      });
+      let found = 0, pct = 0, phase = 'scanning';
+      for (const { result } of res) {
+        if (!result) continue;
+        found += result.found;
+        if (result.pct > pct) { pct = result.pct; }
+        if (result.phase !== 'scanning' && result.phase !== 'done') phase = result.phase;
+      }
+      if (busy) setStatus(`Scanning… ${pct}% · ${plural(found, 'page')} found${phase !== 'scanning' ? ` · ${phase}` : ''}\nKeep this tab in front until it finishes.`);
+    } catch {}
+  }, 700);
 
   const pdfsBefore = pdfs.size, pagesBefore = pages.length;
   const knownKeys = new Set(pages.map((p) => `${p.tabId}|${p.key}`));
-  let tainted = 0;
+  let tainted = 0, stopped = false;
+  const missing = [];
   let title = tab.title || '';
   if (isPdfUrl(tab.url) && !pdfs.has(tab.url)) {
     pdfs.set(tab.url, { url: tab.url, label: tab.title, source: 'page', tabId: tab.id, frameId: 0 });
@@ -133,6 +152,8 @@ async function scan(append) {
       if (!result) continue;
       if (frameId === 0 && result.title) title = result.title;
       tainted += result.tainted;
+      stopped = stopped || result.stopped;
+      missing.push(...result.missing);
       for (const p of result.pdfs) if (!pdfs.has(p.url)) pdfs.set(p.url, { ...p, tabId: tab.id, frameId });
       for (const img of result.images) {
         const k = `${tab.id}|${img.key}`;
@@ -144,7 +165,10 @@ async function scan(append) {
   } catch (e) {
     // Chrome's built-in PDF viewer and some protected pages refuse script injection.
     if (pdfs.size === pdfsBefore) setStatus('Could not scan this page: ' + e.message, true);
+  } finally {
+    clearInterval(poll);
   }
+  const secs = ((performance.now() - t0) / 1000).toFixed(1);
 
   if (!append || !$('fileName').value) $('fileName').value = sanitizeName(title);
   scanningTabId = null;
@@ -155,8 +179,17 @@ async function scan(append) {
   if ($('status').classList.contains('error') && !newPdfs) return;
   let msg = append
     ? `Added ${plural(newPages, 'page')} and ${plural(newPdfs, 'PDF')}. Total: ${plural(pages.length, 'page')}.`
-    : `Found ${plural(newPdfs, 'PDF file')} and ${plural(newPages, 'page image')}.`;
+    : `Found ${plural(newPdfs, 'PDF file')} and ${plural(newPages, 'page image')} in ${secs} s.`;
+  if (stopped) msg += '\nStopped early: pages below where it stopped were not scanned.';
+  if (missing.length) {
+    msg += `\nThe viewer never showed page(s) ${missing.slice(0, 15).join(', ')}${missing.length > 15 ? '…' : ''}. ` +
+      'Try Scan speed "Careful", or scroll to them and press "+ Scan & add".';
+  }
   if (tainted) msg += `\n${tainted} canvas page(s) were blocked by the site and could not be captured.`;
+  if (!$('status').classList.contains('error') && (missing.length || tainted)) {
+    setStatus(msg, true);
+    return;
+  }
   if (!newPdfs && !newPages) msg += '\nTry lowering "Ignore images smaller than", or scroll the document once and scan again.';
   if (pages.length) msg += '\nTip: open another tab and press "+ Scan & add" to combine documents.';
   setStatus(msg);
@@ -524,7 +557,21 @@ async function toJpeg(blob, page, look) {
   }
 
   const out = await new Promise((r) => canvas.toBlob(r, 'image/jpeg', look.quality));
-  return { jpeg: new Uint8Array(await out.arrayBuffer()), width: canvas.width, height: canvas.height };
+  return { blob: out, jpeg: new Uint8Array(await out.arrayBuffer()), width: canvas.width, height: canvas.height };
+}
+
+// Runs fn over items with a limited number in flight, keeping results in order.
+async function runPool(items, limit, fn) {
+  const results = new Array(items.length);
+  let next = 0;
+  const lane = async () => {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await fn(items[i], i);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, lane));
+  return results;
 }
 
 async function buildPdf() {
@@ -534,34 +581,70 @@ async function buildPdf() {
   setBusy(true);
   const bar = $('progress');
   bar.hidden = false;
-  bar.max = selected.length;
-  bar.value = 0;
   const look = {
     quality: parseFloat($('quality').value) || 0.95,
     colorMode: $('colorMode').value,
     enhance: $('enhance').checked,
     trim: $('trim').checked,
   };
-  const out = [];
+  const useOcr = $('ocr').checked;
+  const t0 = performance.now();
+  // Each page counts once for the image and, with OCR, once for reading its text.
+  const steps = selected.length * (useOcr ? 2 : 1);
+  bar.max = steps;
+  bar.value = 0;
+  let done = 0, read = 0, words = 0;
   const failed = [];
+  const tick = () => {
+    bar.value = done + read;
+    setStatus(useOcr
+      ? `Preparing pages ${done}/${selected.length} · reading text ${read}/${selected.length}…`
+      : `Adding page ${done}/${selected.length}…`);
+  };
   try {
-    for (let i = 0; i < selected.length; i++) {
-      setStatus(`Adding page ${i + 1} of ${selected.length}…`);
+    if (useOcr) {
+      setStatus('Starting the text reader (OCR)…');
       try {
-        out.push(await toJpeg(await fetchImageBlob(selected[i]), selected[i], look));
+        await Ocr.start($('ocrLang').value);
       } catch (e) {
-        failed.push(i + 1);
+        throw new Error(`could not start OCR for this language (${e.message || e}). Check your connection, or turn OCR off.`);
       }
-      bar.value = i + 1;
     }
-    if (!out.length) throw new Error('none of the pages could be loaded');
-    const pdf = PdfBuilder.build(out, { title: $('fileName').value, pageSize: $('pageSize').value });
+    tick();
+    // Pages are fetched and processed a few at a time, while OCR workers read finished pages in parallel.
+    const limit = useOcr ? Ocr.workerCount() + 2 : 4;
+    const out = await runPool(selected, limit, async (p, i) => {
+      let page;
+      try {
+        page = await toJpeg(await fetchImageBlob(p), p, look);
+      } catch {
+        failed.push(i + 1);
+        done++; read++; tick();
+        return null;
+      }
+      done++; tick();
+      if (useOcr) {
+        try {
+          page.words = await Ocr.recognize(page.blob, page.width, page.height);
+          words += page.words.length;
+        } catch { page.words = []; }
+        read++; tick();
+      }
+      delete page.blob;
+      return page;
+    });
+    const good = out.filter(Boolean);
+    if (!good.length) throw new Error('none of the pages could be loaded');
+    setStatus('Writing the PDF…');
+    const pdf = await PdfBuilder.build(good, { title: $('fileName').value, pageSize: $('pageSize').value });
     const fname = sanitizeName($('fileName').value) + '.pdf';
     const url = URL.createObjectURL(pdf);
     await download(url, fname);
     setTimeout(() => URL.revokeObjectURL(url), 120000);
-    let msg = `Saved ${fname}: ${plural(out.length, 'page')}, ${(pdf.size / 1048576).toFixed(1)} MB.`;
-    if (failed.length) msg += `\nSkipped page(s) ${failed.join(', ')}: could not load the image.`;
+    const secs = ((performance.now() - t0) / 1000).toFixed(1);
+    let msg = `Saved ${fname}: ${plural(good.length, 'page')}, ${(pdf.size / 1048576).toFixed(1)} MB, in ${secs} s.`;
+    if (useOcr) msg += words ? `\nSearchable: ${words.toLocaleString()} words recognised.` : '\nOCR found no readable text.';
+    if (failed.length) msg += `\nSkipped page(s) ${failed.sort((a, b) => a - b).join(', ')}: could not load the image.`;
     setStatus(msg, failed.length > 0);
   } catch (e) {
     setStatus('Could not build the PDF: ' + e.message, true);

@@ -19,6 +19,15 @@ Finds PDFs and scanned document pages on any webpage and downloads them as one c
    - **Scanned pages**: page images found on the page (`<img>`, `<canvas>` pages drawn by viewers, SVG images and CSS backgrounds).
      Click a thumbnail to leave it out, and drag thumbnails to change the order.
 4. Set the file name, page size (*Match image*, *A4*, *Letter*) and quality, then click **Download … as PDF**.
+   With **Searchable text (OCR)** on (the default), the PDF gets an invisible text layer. You can then search it (Ctrl+F),
+   select text and copy it, just like a normal PDF.
+
+## Searchable PDFs (OCR)
+- OCR runs entirely in your browser with the bundled Tesseract engine. Nothing is uploaded.
+- English is built in. Other languages (Spanish, French, German, Portuguese, Italian, Dutch, Russian, Arabic, Hindi,
+  Chinese, Japanese) download their language data once (2–10 MB), then work offline.
+- It reads several pages at once, one per CPU core pair. Expect about 1–2 s per page on a typical laptop.
+- It works best on clear scans. *Auto-enhance contrast* or *Black & white* can help with faint or grey pages.
 
 ## Extra features
 - **+ Scan & add**: scan another tab and add its pages to the list, to combine several documents into one PDF.
@@ -33,12 +42,22 @@ Finds PDFs and scanned document pages on any webpage and downloads them as one c
 - **Keyboard shortcut**: Alt+Shift+D opens the panel. You can change it at `chrome://extensions/shortcuts`.
 
 ## Scan options
-- **Wait per scroll step**: raise it (for example to 1000–1500 ms) on slow sites if pages are missing.
+- **Scan speed**:
+  - *Fast* (recommended): moves on as soon as the page stops changing, rather than waiting a fixed time.
+  - *Turbo*: quickest, but it can miss pages on slow viewers that don't number their pages.
+  - *Careful*: for very slow sites.
+
+  After scrolling, the scanner goes back to any numbered page it didn't capture and waits for it. If a page still
+  never appeared, the status line names it.
 - **Ignore images smaller than**: skips icons and logos. Lower it if the document's pages are small images.
+
+## Troubleshooting
+- **Pages missing?** The status line lists pages the viewer never showed. Switch *Scan speed* to *Careful* and scan again,
+  or scroll to those pages yourself and press **+ Scan & add**.
+- **Duplicate pages?** Click the extra thumbnail to skip it.
 
 ## Limits
 - Some sites draw pages on a canvas protected against copying. Those pages can't be captured, and the status line says how many.
-- Text in scanned pages is saved as an image (the PDF is not searchable).
 - Only use it on documents you're allowed to download.
 
 ## Files
@@ -48,4 +67,6 @@ Finds PDFs and scanned document pages on any webpage and downloads them as one c
 | `background.js` | Sets the side panel to open on icon click |
 | `scanner.js` | Injected into every frame; finds PDFs and page images, auto-scrolls |
 | `panel.html/.css/.js` | Side panel UI, image fetching, JPEG conversion, downloads |
-| `pdf-builder.js` | Small built-in PDF writer (one JPEG per page, no external libraries) |
+| `pdf-builder.js` | Small built-in PDF writer: one JPEG per page plus an invisible OCR text layer |
+| `ocr.js` | Runs Tesseract OCR workers in parallel and returns word positions |
+| `lib/tesseract/` | Tesseract.js 6 (Apache-2.0): engine, WebAssembly cores and English language data |

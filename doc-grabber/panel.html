@@ -23,7 +23,13 @@
     <details>
       <summary>Scan options</summary>
       <label class="check"><input type="checkbox" id="autoScroll"> Auto-scroll to load every page</label>
-      <label>Wait per scroll step (ms) <input type="number" id="delay" min="100" max="5000" step="100"></label>
+      <label>Scan speed
+        <select id="speed">
+          <option value="turbo">Turbo: quickest, may miss pages on slow viewers</option>
+          <option value="fast">Fast: recommended</option>
+          <option value="careful">Careful: slow sites or missing pages</option>
+        </select>
+      </label>
       <label>Ignore images smaller than (px) <input type="number" id="minSize" min="50" max="3000" step="50"></label>
     </details>
     <p id="status" class="status">Open a page with a PDF or a scanned document, then press Scan.</p>
@@ -69,6 +75,26 @@
         <label class="check"><input type="checkbox" id="enhance"> Auto-enhance contrast</label>
         <label class="check"><input type="checkbox" id="trim"> Trim white margins</label>
       </div>
+      <div class="ocr-box">
+        <label class="check"><input type="checkbox" id="ocr"> <b>Searchable text (OCR)</b></label>
+        <label>Document language
+          <select id="ocrLang">
+            <option value="eng">English (built in)</option>
+            <option value="spa">Spanish</option>
+            <option value="fra">French</option>
+            <option value="deu">German</option>
+            <option value="por">Portuguese</option>
+            <option value="ita">Italian</option>
+            <option value="nld">Dutch</option>
+            <option value="rus">Russian</option>
+            <option value="ara">Arabic</option>
+            <option value="hin">Hindi</option>
+            <option value="chi_sim">Chinese (simplified)</option>
+            <option value="jpn">Japanese</option>
+          </select>
+        </label>
+        <div class="hint">Other languages download once (2–10 MB), then work offline.</div>
+      </div>
       <label>Quality
         <select id="quality">
           <option value="0.95">High</option>
@@ -92,6 +118,8 @@
     </div>
   </div>
 
+  <script src="lib/tesseract/tesseract.min.js"></script>
+  <script src="ocr.js"></script>
   <script src="pdf-builder.js"></script>
   <script src="panel.js"></script>
 </body>

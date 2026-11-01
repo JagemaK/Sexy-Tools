@@ -138,3 +138,8 @@ p.hint { margin: 0 0 8px; }
 .preview-bar { display: flex; gap: 8px; align-items: center; margin-top: 10px; color: #fff; }
 .preview-bar button { background: rgba(255,255,255,.12); color: #fff; border-color: transparent; min-width: 34px; }
 .grid.bw.enhance .thumb img, .preview.bw.enhance img { filter: grayscale(1) contrast(4) brightness(1.15); }
+
+/* ---- v1.2 additions ---- */
+.ocr-box { margin-top: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
+.ocr-box label.check { margin-top: 0; }
+.ocr-box .hint { margin-top: 4px; }
