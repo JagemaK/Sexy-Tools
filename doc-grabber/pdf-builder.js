@@ -60,7 +60,7 @@ const PdfBuilder = (() => {
     const kids = pages.map((_, i) => `${pageObj(i)} 0 R`).join(' ');
     obj(1, '<< /Type /Catalog /Pages 2 0 R >>');
     obj(2, `<< /Type /Pages /Kids [${kids}] /Count ${pages.length} >>`);
-    obj(3, `<< /Title ${pdfText(title)} /Producer (Doc Grabber) /CreationDate ${pdfDate()} >>`);
+    obj(3, `<< /Title ${pdfText(title)} /Producer (Jagema's Doc Grabber) /CreationDate ${pdfDate()} >>`);
 
     pages.forEach((img, i) => {
       const p = pageObj(i), c = p + 1, im = p + 2;

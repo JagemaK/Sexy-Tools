@@ -2,18 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Doc Grabber</title>
+  <title>Jagema's Doc Grabber</title>
   <link rel="stylesheet" href="panel.css">
 </head>
 <body>
   <header>
-    <img src="icons/icon32.png" alt="" width="24" height="24">
-    <h1>Doc Grabber</h1>
+    <img src="icons/icon32.png" alt="" width="26" height="26">
+    <div>
+      <h1>Jagema's Doc Grabber</h1>
+      <div class="tagline">PDFs &amp; scans → one clean PDF</div>
+    </div>
   </header>
 
   <section class="card">
     <div class="row">
       <button id="scan" class="primary">Scan this page</button>
+      <button id="scanAdd" hidden title="Scan this tab and add its pages to the ones below">+ Scan &amp; add</button>
       <button id="stop" hidden>Stop</button>
     </div>
     <details>
@@ -26,22 +30,33 @@
   </section>
 
   <section id="pdfSection" class="card" hidden>
-    <h2>PDF files <span id="pdfCount" class="badge"></span></h2>
+    <h2>PDF files <span id="pdfCount" class="badge"></span>
+      <button id="dlAll" class="mini push" hidden>Download all</button></h2>
     <ul id="pdfList" class="pdf-list"></ul>
   </section>
 
   <section id="pageSection" class="card" hidden>
-    <h2>Scanned pages <span id="pageCount" class="badge"></span></h2>
+    <h2>Scanned pages <span id="pageCount" class="badge"></span>
+      <button id="clear" class="mini push" title="Remove all pages">Clear</button></h2>
     <div class="row small">
-      <button id="selAll">Select all</button>
-      <button id="selNone">Select none</button>
-      <span class="hint">Drag to reorder</span>
+      <button id="selAll">All</button>
+      <button id="selNone">None</button>
+      <input type="text" id="range" placeholder="Pages e.g. 1-5, 8" spellcheck="false">
+      <button id="selRange">Select</button>
     </div>
+    <p class="hint">Click to skip · double-click to preview · drag to reorder · ↻ to rotate</p>
     <div id="grid" class="grid"></div>
 
     <div class="build">
       <label>File name <input type="text" id="fileName" spellcheck="false"></label>
       <div class="row">
+        <label>Look
+          <select id="colorMode">
+            <option value="color">Color</option>
+            <option value="gray">Grayscale</option>
+            <option value="bw">Black &amp; white (document)</option>
+          </select>
+        </label>
         <label>Page size
           <select id="pageSize">
             <option value="fit">Match image</option>
@@ -49,19 +64,33 @@
             <option value="letter">Letter</option>
           </select>
         </label>
-        <label>Quality
-          <select id="quality">
-            <option value="0.95">High</option>
-            <option value="0.85">Medium</option>
-            <option value="0.7">Small file</option>
-          </select>
-        </label>
       </div>
+      <div class="row">
+        <label class="check"><input type="checkbox" id="enhance"> Auto-enhance contrast</label>
+        <label class="check"><input type="checkbox" id="trim"> Trim white margins</label>
+      </div>
+      <label>Quality
+        <select id="quality">
+          <option value="0.95">High</option>
+          <option value="0.85">Medium</option>
+          <option value="0.7">Small file</option>
+        </select>
+      </label>
       <label class="check"><input type="checkbox" id="saveAs"> Ask where to save</label>
       <button id="build" class="primary">Download as PDF</button>
       <progress id="progress" hidden></progress>
     </div>
   </section>
+
+  <div id="preview" class="preview" hidden>
+    <img id="previewImg" alt="">
+    <div class="preview-bar">
+      <button id="prevPage">‹</button>
+      <span id="previewLabel"></span>
+      <button id="nextPage">›</button>
+      <button id="closePreview">✕</button>
+    </div>
+  </div>
 
   <script src="pdf-builder.js"></script>
   <script src="panel.js"></script>
