@@ -88,17 +88,30 @@ const DA_CLOCK_DEFAULTS = {
   supervisor: '', // '' = leave whatever the dialer has selected
   source: 'dialer', // 'dialer' (time shown in the dialer's top bar) or 'system'
   warnMin: 1, // countdown shown before acting
-  graceMin: 15 // still act if the tab was closed/asleep at the exact minute
+  graceMin: 15, // still act if the tab was closed/asleep at the exact minute
+  breaks: [] // [{ start: '10:30', minutes: 15 }] — tea cup on at start, off after `minutes`
 };
 
+// Schedule event kinds: 'in', 'out', and 'b0', 'b1', ... (start of break #n).
+function daKindLabel(kind) {
+  return kind === 'in' ? 'Clock in' : kind === 'out' ? 'Clock out' : 'Break';
+}
+
+function daScheduleEvents(cfg) {
+  return [{ kind: 'in', min: daHmToMin(cfg.inTime) }, { kind: 'out', min: daHmToMin(cfg.outTime) }]
+    .concat((cfg.breaks || []).map((b, i) => ({ kind: 'b' + i, min: daHmToMin(b.start), minutes: Number(b.minutes) || 15 })))
+    .filter(e => e.min != null);
+}
+
 async function daGetClock() {
-  const s = await chrome.storage.local.get(['clock', 'dialerClock', 'clockDone']);
+  const s = await chrome.storage.local.get(['clock', 'dialerClock', 'clockDone', 'breakState']);
   return {
     cfg: Object.assign({}, DA_CLOCK_DEFAULTS, s.clock || {}),
     // offsetMs: dialer wall clock minus this computer's wall clock
     offsetMs: (s.dialerClock && s.dialerClock.offsetMs) || 0,
     hasDialerClock: !!s.dialerClock,
-    done: s.clockDone || {}
+    done: s.clockDone || {},
+    breakState: s.breakState || { on: false }
   };
 }
 
@@ -131,8 +144,7 @@ function daClockPlan({ cfg, offsetMs, done }, now = Date.now()) {
   const nowMin = wall.getHours() * 60 + wall.getMinutes() + wall.getSeconds() / 60;
   const todayOn = cfg.enabled && cfg.days.includes(wall.getDay());
   const rec = done[key] || {};
-  const today = ['in', 'out'].map(kind => {
-    const tMin = daHmToMin(kind === 'in' ? cfg.inTime : cfg.outTime);
+  const today = daScheduleEvents(cfg).map(({ kind, min: tMin, minutes }) => {
     const at = now + (tMin - nowMin) * 60000; // real ms of the event
     let status = 'upcoming';
     if (!todayOn || tMin == null) status = 'off';
@@ -141,15 +153,14 @@ function daClockPlan({ cfg, offsetMs, done }, now = Date.now()) {
     else if (nowMin >= tMin + cfg.graceMin) status = 'missed';
     else if (nowMin >= tMin) status = 'due';
     else if (nowMin >= tMin - cfg.warnMin) status = 'warn';
-    return { kind, at, status, key, result: rec[kind] };
+    return { kind, at, status, key, minutes, result: rec[kind] };
   });
   let next = today.filter(e => ['upcoming', 'warn', 'due'].includes(e.status)).sort((a, b) => a.at - b.at)[0];
   if (!next && cfg.enabled) {
     for (let d = 1; d <= 7 && !next; d++) {
       const w = new Date(wall.getFullYear(), wall.getMonth(), wall.getDate() + d);
       if (!cfg.days.includes(w.getDay())) continue;
-      const kinds = ['in', 'out'].map(kind => ({ kind, min: daHmToMin(kind === 'in' ? cfg.inTime : cfg.outTime) }))
-        .filter(k => k.min != null).sort((a, b) => a.min - b.min);
+      const kinds = daScheduleEvents(cfg).sort((a, b) => a.min - b.min);
       if (kinds.length) {
         const dayStartReal = now + (w.getTime() - wall.getTime());
         next = { kind: kinds[0].kind, at: dayStartReal + kinds[0].min * 60000, status: 'upcoming', key: daDateKey(w) };

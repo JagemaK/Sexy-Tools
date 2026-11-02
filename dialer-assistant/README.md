@@ -41,6 +41,16 @@ A **Sean's Dialer** panel floats over the dialer pages.
   confirms each scheduled clock in/out (or says why it failed).
 - A manual clock in/out stands in for that day's scheduled one.
 
+## Breaks (the tea cup)
+- In the Time Clock tab: pick a length (15/30/45 min, 1 hour, or *until I end it*) and press **Start break**. That clicks the
+  dialer's tea cup, and handles a confirmation/reason dialog if one pops up.
+- While on break: a break timer in the header and the tab, **End break** (clicks the tea cup again to come back) and **+5 min**.
+  When the time is up the tea cup is turned off automatically. A banner counts down the last minute(s).
+- **Scheduled breaks**: in Schedule → *Breaks (tea cup)* → **+ Add break**, set the start time and length. They follow the
+  same dialer/computer time and days as the clock in/out, are skipped if you're clocked out, and come back automatically.
+- Clocking out (manually or on schedule) ends a running break first.
+- Break time today is shown in the Activity tab.
+
 ## Activity tab
 Today's counts (lookups, finished runs, Zoiper calls) and a log of lookups, runs, calls and time clock actions.
 

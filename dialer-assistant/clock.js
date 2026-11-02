@@ -188,6 +188,17 @@ window.SDClock = (() => {
         return `Supervisor changed to ${supervisor}.`;
       }
 
+      if (kind === 'out') {
+        const { breakState: b } = await chrome.storage.local.get('breakState');
+        if (b && b.on) {
+          await closeDialog().catch(() => {});
+          busy = false;
+          await performBreak(false).catch(() => {});
+          busy = true;
+          await openDialog();
+          pickSupervisor(supervisor);
+        }
+      }
       const want = kind === 'in' ? 'Clock In' : 'Clock Out';
       const opposite = kind === 'in' ? 'Clock Out' : 'Clock In';
       if (findByText(opposite) && !findByText(want)) return kind === 'in' ? 'Already clocked in.' : 'Already clocked out.';
@@ -207,6 +218,89 @@ window.SDClock = (() => {
       busy = false;
       scrapeSupervisors().catch(() => {});
     }
+  }
+
+  // ---------- breaks (the tea cup in the top bar) ----------
+  const CUP_RE = /coffee|mug|cup|tea\b|break/i;
+  function cupEl() {
+    const cands = document.querySelectorAll('i, span, svg, img, a, button, [title], [aria-label]');
+    for (const el of cands) {
+      if (isOurs(el) || !visible(el)) continue;
+      const cls = typeof el.className === 'string' ? el.className : (el.className && el.className.baseVal) || '';
+      const attrs = `${cls} ${el.getAttribute('title') || ''} ${el.getAttribute('aria-label') || ''} ${el.getAttribute('src') || ''} ${el.getAttribute('alt') || ''}`;
+      const ownText = el.childElementCount === 0 ? el.textContent.trim() : '';
+      if (CUP_RE.test(attrs) || ownText === '☕') {
+        return el.closest('a, button, [role=button], [onclick]') || el;
+      }
+    }
+    return null;
+  }
+
+  // After clicking the cup, some dialers ask for a reason/confirmation in a dialog.
+  async function handleBreakDialog(on) {
+    const words = on
+      ? ['start break', 'go on break', 'take break', 'begin break', 'break', 'ok', 'yes', 'confirm', 'submit', 'save', 'start']
+      : ['end break', 'back from break', 'return from break', 'resume', 'return', 'i m back', 'back', 'ok', 'yes', 'confirm', 'submit', 'end'];
+    const modal = await waitFor(() => [...document.querySelectorAll('.modal, [role=dialog], .ui-dialog, .swal2-popup, .bootbox')]
+      .find(m => !isOurs(m) && visible(m) && !findByText('Clock In', { root: m }) && !findByText('Clock Out', { root: m })), 2500);
+    if (!modal) return;
+    const sel = [...modal.querySelectorAll('select')].find(x => visible(x) && !x.value);
+    if (sel) {
+      const opt = [...sel.options].find(o => o.value && /break/i.test(o.text)) || [...sel.options].find(o => o.value);
+      if (opt) { sel.value = opt.value; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+    }
+    for (const w of words) {
+      const b = findByText(w, { root: modal });
+      if (b) { b.click(); await sleep(600); return; }
+    }
+  }
+
+  async function setBreakState(st) {
+    await chrome.storage.local.set({ breakState: st });
+  }
+
+  // on=true: start a break for `minutes` (0 = until ended). on=false: come back.
+  async function performBreak(on, { minutes = 0, origin = 'manual', label = '', beforeClick } = {}) {
+    if (busy) throw new Error('Another time clock action is running.');
+    const { breakState: cur = { on: false } } = await chrome.storage.local.get('breakState');
+    if (on && cur.on) return 'Already on break.';
+    if (!on && !cur.on) return 'Not on break.';
+    if (on && status() === 'out') throw new Error('You are clocked out, so no break was started.');
+    const cup = cupEl();
+    if (!cup) throw new Error('Could not find the tea cup (break) button in the top bar.');
+    busy = true;
+    const prevFlag = document.documentElement.dataset.daRunning;
+    document.documentElement.dataset.daRunning = '1';
+    try {
+      const now = Date.now();
+      // Record everything first: the dialer may reload the page right after the click.
+      let msg;
+      if (on) {
+        msg = minutes ? `On break for ${minutes} min.` : 'On break.';
+        await setBreakState({ on: true, since: now, plannedEnd: minutes ? now + minutes * 60000 : null, origin, label });
+        await daLog('break', `${origin === 'schedule' ? 'Scheduled break' : 'Break'} started${label ? ' (' + label + ')' : ''}: ${msg}`, { ok: true });
+      } else {
+        const ms = now - (cur.since || now);
+        msg = `Back from break (${Math.round(ms / 60000)} min).`;
+        await setBreakState({ on: false, lastEnd: now });
+        await daLog('break', msg, { ok: true, breakMs: ms });
+      }
+      if (beforeClick) await beforeClick(msg);
+      cup.click();
+      await handleBreakDialog(on);
+      return msg;
+    } finally {
+      document.documentElement.dataset.daRunning = prevFlag || '0';
+      busy = false;
+    }
+  }
+
+  async function extendBreak(minutes) {
+    const { breakState: cur } = await chrome.storage.local.get('breakState');
+    if (!cur || !cur.on) return;
+    cur.plannedEnd = Math.max(cur.plannedEnd || Date.now(), Date.now()) + minutes * 60000;
+    await setBreakState(cur);
+    await daLog('break', `Break extended by ${minutes} min.`);
   }
 
   // ---------- scheduler ----------
@@ -241,13 +335,17 @@ window.SDClock = (() => {
       if (ev.status === 'missed' && !(state.done[ev.key] || {})['missed_' + ev.kind]) {
         if (await claim(ev.key, 'missed_' + ev.kind)) {
           await markDone(ev.key, 'missed_' + ev.kind, Date.now());
-          await daLog('clock', `Missed scheduled clock ${ev.kind} (no dialer tab open in time).`, { error: true });
-          chrome.runtime.sendMessage({ type: 'notify', title: `Missed clock ${ev.kind}`, message: 'The dialer tab was not open at the scheduled time.' });
+          await daLog('clock', `Missed scheduled ${daKindLabel(ev.kind).toLowerCase()} (no dialer tab open in time).`, { error: true });
+          chrome.runtime.sendMessage({ type: 'notify', title: `Missed ${daKindLabel(ev.kind).toLowerCase()}`, message: 'The dialer tab was not open at the scheduled time.' });
         }
       }
       if (ev.status !== 'due' || busy) continue;
       if (isJobRunning()) continue; // wait for the disposition run to finish (within the grace window)
       if (!(await claim(ev.key, ev.kind))) continue;
+      if (ev.kind[0] === 'b') {
+        await scheduledBreak(ev, state);
+        continue;
+      }
       onEvent({ kind: ev.kind, phase: 'start' });
       try {
         const msg = await perform(ev.kind, state.cfg.supervisor, 'schedule', ev.key);
@@ -262,6 +360,48 @@ window.SDClock = (() => {
         onEvent({ kind: ev.kind, phase: 'error', msg: e.message });
         await sleep(20000);
       }
+    }
+    // Come back from a break when its time is up.
+    const b = state.breakState;
+    if (b.on && b.plannedEnd && Date.now() >= b.plannedEnd && !busy && (await claim('break', String(b.since)))) {
+      onEvent({ kind: 'break-end', phase: 'start' });
+      try {
+        const msg = await performBreak(false, {
+          origin: 'auto',
+          beforeClick: m => chrome.runtime.sendMessage({ type: 'notify', title: "Sean's Dialer: break over", message: m })
+        });
+        onEvent({ kind: 'break-end', phase: 'done', msg });
+      } catch (e) {
+        await daLog('break', `Ending the break failed: ${e.message}`, { error: true });
+        chrome.runtime.sendMessage({ type: 'notify', title: 'Ending the break failed', message: e.message });
+        onEvent({ kind: 'break-end', phase: 'error', msg: e.message });
+        await sleep(20000);
+      }
+    }
+  }
+
+  async function scheduledBreak(ev, state) {
+    const label = daFmtHm(state.cfg.breaks[Number(ev.kind.slice(1))].start);
+    if (status() === 'out') {
+      await markDone(ev.key, ev.kind, { at: Date.now(), msg: 'Skipped: clocked out.' });
+      await daLog('break', `Scheduled break at ${label} skipped: you were clocked out.`);
+      return;
+    }
+    onEvent({ kind: 'break', phase: 'start' });
+    try {
+      const msg = await performBreak(true, {
+        minutes: ev.minutes, origin: 'schedule', label,
+        beforeClick: async m => {
+          await markDone(ev.key, ev.kind, { at: Date.now(), msg: m });
+          chrome.runtime.sendMessage({ type: 'notify', title: "Sean's Dialer: break started", message: m });
+        }
+      });
+      onEvent({ kind: 'break', phase: 'done', msg });
+    } catch (e) {
+      await daLog('break', `Scheduled break at ${label} failed: ${e.message}`, { error: true });
+      chrome.runtime.sendMessage({ type: 'notify', title: 'Break failed', message: e.message });
+      onEvent({ kind: 'break', phase: 'error', msg: e.message });
+      await sleep(20000);
     }
   }
 
@@ -309,6 +449,10 @@ window.SDClock = (() => {
         throw e;
       }
     },
+    startBreak: minutes => performBreak(true, { minutes }),
+    endBreak: () => performBreak(false),
+    extendBreak,
+    hasCup: () => !!cupEl(),
     status,
     shiftTimer: () => { const el = shiftTimerEl(); return el ? el.textContent.trim() : ''; },
     dialerClockText: () => { const el = dialerClockEl(); return el ? el.textContent.trim() : ''; },

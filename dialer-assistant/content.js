@@ -436,6 +436,7 @@
     logout: '<svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>',
     user: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
     refresh: '<svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4L21 8M21 3v5h-5"/></svg>',
+    cup: '<svg viewBox="0 0 24 24"><path d="M17 8h1a4 4 0 0 1 0 8h-1M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/><path d="M6 2v3M10 2v3M14 2v3"/></svg>',
     alert: '<svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>'
   };
 
@@ -459,7 +460,7 @@
     .hsub { font-size: 11px; color: #c7d2fe; display: flex; gap: 8px; align-items: center; white-space: nowrap; overflow: hidden; }
     .hsub b { color: #fff; font-weight: 600; font-variant-numeric: tabular-nums; }
     .pill { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 1px 7px; font-size: 10.5px; font-weight: 700; letter-spacing: .03em; }
-    .pill.in { background: rgba(34,197,94,.22); color: #bbf7d0; } .pill.out { background: rgba(148,163,184,.25); color: #e2e8f0; }
+    .pill.in { background: rgba(34,197,94,.22); color: #bbf7d0; } .pill.pb { background: rgba(251,191,36,.25); color: #fde68a; } .pill.out { background: rgba(148,163,184,.25); color: #e2e8f0; }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: #93c5fd; flex: none; box-shadow: 0 0 0 2px rgba(255,255,255,.15); }
     .dot.run { background: #fde047; animation: pulse 1s infinite; }
     .dot.ok { background: #4ade80; } .dot.err { background: #f87171; }
@@ -567,8 +568,16 @@
     .seg button.on { background: #fff; color: var(--blue-d); box-shadow: 0 1px 3px rgba(15,23,42,.15); }
     .flab { font-size: 11.5px; font-weight: 600; color: #475569; margin-bottom: 4px; }
     .hint { font-size: 11.5px; color: var(--mut); }
+    .brk { border: 1px solid var(--line); border-radius: 11px; padding: 9px 10px; display: flex; flex-direction: column; gap: 8px; background: var(--soft); }
+    .brk.on { background: #fffbeb; border-color: #fde68a; }
+    .brk-h { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+    .brk-h .timer { color: #92400e; }
+    .brk .inp select { padding: 6px 0; font-size: 13px; }
+    .btn.amber { background: #f59e0b; color: #fff; } .btn.amber:hover { background: #d97706; }
+    .brow { display: flex; gap: 6px; align-items: center; margin-top: 6px; }
+    .brow .inp { flex: 1; } .brow .inp:first-child { flex: 1.3; } .brow .rm { border: 0; background: #fee2e2; color: #b91c1c; border-radius: 8px; width: 30px; height: 34px; cursor: pointer; display: grid; place-items: center; }
     /* activity */
-    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
     .stat { border: 1px solid var(--line); border-radius: 10px; padding: 7px 8px; background: var(--soft); text-align: center; }
     .stat b { display: block; font-size: 18px; } .stat small { font-size: 10.5px; color: var(--mut); font-weight: 600; }
     .log { display: flex; flex-direction: column; }
@@ -709,6 +718,11 @@
       else clockAction(act, v, b);
     });
     els.ckForm.addEventListener('change', () => saveClockForm(false));
+    els.ckLive.addEventListener('change', e => {
+      if (e.target.id !== 'brMin') return;
+      const ui = loadUi(); ui.brMin = Number(e.target.value); saveUi(ui);
+      e.target.blur();
+    });
 
     initDragResize($('head'));
 
@@ -949,7 +963,10 @@
   // ---------- Time Clock tab ----------
   const SDC = window.SDClock;
   const fmtTime = (d, sec = true) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: sec ? '2-digit' : undefined });
-  const KIND = { in: 'Clock in', out: 'Clock out' };
+  const clockFmt = ms => {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    return `${s >= 3600 ? Math.floor(s / 3600) + ':' : ''}${String(Math.floor(s / 60) % 60).padStart(s >= 3600 ? 2 : 1, '0')}:${String(s % 60).padStart(2, '0')}`;
+  };
 
   function fmtIn(ms) {
     const s = Math.max(0, Math.round(ms / 1000));
@@ -967,22 +984,29 @@
   async function liveTick() {
     clockState = await daGetClock();
     const { cfg, offsetMs, hasDialerClock } = clockState;
+    const brk = clockState.breakState;
     const plan = daClockPlan(clockState);
     const st = SDC ? SDC.status() : null;
     const timer = SDC ? SDC.shiftTimer() : '';
     const dialerNow = new Date(Date.now() + offsetMs);
 
     // header line: dialer time + clock status
+    els.hsub.title = hasDialerClock ? 'Dialer time' : 'This PC (dialer clock not seen yet)';
     els.hsub.innerHTML = `${ICON.clock}<b>${hasDialerClock ? fmtTime(dialerNow) : fmtTime(new Date())}</b>` +
-      `<span>${hasDialerClock ? 'dialer' : 'PC'}</span>` +
-      (st ? `<span class="pill ${st}">${st === 'in' ? 'IN' : 'OUT'}${st === 'in' && timer ? ' ' + timer : ''}</span>` : '');
+      (brk.on ? `<span class="pill pb">BREAK ${clockFmt(Date.now() - brk.since)}</span>`
+        : st ? `<span class="pill ${st}">${st === 'in' ? 'IN' : 'OUT'}${st === 'in' && timer ? ' ' + timer : ''}</span>` : '');
 
     // countdown / result banner (shown on every tab, even minimized)
     const warn = plan.today.find(e => e.status === 'warn' || e.status === 'due');
     let banner = '';
-    if (warn) {
+    const brkLeft = brk.on && brk.plannedEnd ? brk.plannedEnd - Date.now() : null;
+    if (brkLeft != null && brkLeft <= Math.max(cfg.warnMin, 1) * 60000) {
+      banner = `<div class="banner on warn">${ICON.cup}<span>Break ends ${brkLeft > 0 ? 'in ' + fmtIn(brkLeft) : 'now…'}</span><span class="sp"></span>
+        <button class="btn sm ghost" data-act="br-ext" data-v="5">+5 min</button>
+        <button class="btn sm ghost" data-act="br-end">End now</button></div>`;
+    } else if (warn) {
       const left = warn.at - Date.now();
-      banner = `<div class="banner on warn">${ICON.alert}<span>${KIND[warn.kind]} ${left > 0 ? 'in ' + fmtIn(left) : 'now…'}</span><span class="sp"></span>
+      banner = `<div class="banner on warn">${warn.kind[0] === 'b' ? ICON.cup : ICON.alert}<span>${daKindLabel(warn.kind)} ${left > 0 ? 'in ' + fmtIn(left) : 'now…'}</span><span class="sp"></span>
         <button class="btn sm ghost" data-act="ck-skip" data-v="${warn.kind}">Skip today</button></div>`;
     } else if (clockMsg && Date.now() - clockMsg.at < 15000) {
       banner = `<div class="banner on ${clockMsg.err ? 'err' : 'ok'}">${clockMsg.err ? ICON.alert : ICON.check}<span>${esc(clockMsg.text)}</span></div>`;
@@ -994,6 +1018,8 @@
     els.clockBadge.textContent = cfg.enabled && plan.next ? daFmtHm(`${wallOf(plan.next.at).getHours()}:${wallOf(plan.next.at).getMinutes()}`) : '';
 
     if ((loadUi().tab || 'lookup') !== 'clock') return;
+    // don't redraw under an open dropdown
+    if (els.ckLive.contains(shadow.activeElement) && shadow.activeElement.tagName === 'SELECT') return;
     const pcNow = new Date();
     const diffMin = Math.round(offsetMs / 60000);
     const diffText = !hasDialerClock ? 'Dialer clock not seen yet (open the dialer page with the top bar).'
@@ -1006,15 +1032,25 @@
     if (cfg.enabled && plan.next) {
       const w = wallOf(plan.next.at);
       const isToday = plan.next.key === plan.key;
-      next = `${ICON.clock}<span>Next: <b>${KIND[plan.next.kind]}</b> ${isToday ? 'today' : w.toLocaleDateString([], { weekday: 'short' })} at <b>${fmtTime(w, false)}</b> · in ${fmtIn(plan.next.at - Date.now())}</span>`;
+      next = `${ICON.clock}<span>Next: <b>${daKindLabel(plan.next.kind)}</b> ${isToday ? 'today' : w.toLocaleDateString([], { weekday: 'short' })} at <b>${fmtTime(w, false)}</b> · in ${fmtIn(plan.next.at - Date.now())}</span>`;
     }
     const today = cfg.enabled ? plan.today.filter(e => e.status !== 'off').map(e => {
       const r = e.result && e.result.at ? ` · ${fmtTime(new Date(e.result.at), false)}` : '';
       const skip = e.status === 'skipped'
         ? `<a class="lnk" data-act="ck-unskip" data-v="${e.kind}">undo</a>`
         : ['upcoming', 'warn'].includes(e.status) ? `<a class="lnk" data-act="ck-skip" data-v="${e.kind}">skip today</a>` : '';
-      return `<div><span class="tag ${e.status}">${e.status}</span>${KIND[e.kind]} ${daFmtHm(e.kind === 'in' ? cfg.inTime : cfg.outTime)}${r} ${skip}</div>`;
+      const at = e.kind === 'in' ? cfg.inTime : e.kind === 'out' ? cfg.outTime : cfg.breaks[Number(e.kind.slice(1))].start;
+      return `<div><span class="tag ${e.status}">${e.status}</span>${daKindLabel(e.kind)} ${daFmtHm(at)}${e.minutes ? ` · ${e.minutes} min` : ''}${r} ${skip}</div>`;
     }).join('') : '';
+    const brkHtml = brk.on
+      ? `<div class="brk on"><div class="brk-h">${ICON.cup} On break <span class="timer">${clockFmt(Date.now() - brk.since)}</span></div>
+          <div class="hint">${brk.plannedEnd ? `Back at <b>${fmtTime(wallOf(brk.plannedEnd), false)}</b> · in ${fmtIn(brk.plannedEnd - Date.now())} (the tea cup is turned off automatically)` : 'Until you end it.'}</div>
+          <div class="row2"><button class="btn green" data-act="br-end">${ICON.check} End break</button>
+            <button class="btn ghost" data-act="br-ext" data-v="5">+5 min</button></div></div>`
+      : `<div class="brk"><div class="brk-h">${ICON.cup} Break</div>
+          <div class="field"><label class="inp"><select id="brMin">${[[15, '15 min'], [30, '30 min'], [45, '45 min'], [60, '1 hour'], [0, 'Until I end it']]
+            .map(([v, t]) => `<option value="${v}" ${v === (loadUi().brMin ?? 15) ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+            <button class="btn amber" data-act="br-start" ${st === 'out' ? 'disabled title="Clocked out"' : ''}>${ICON.cup} Start break</button></div></div>`;
     els.ckLive.innerHTML = `
       <div class="status">${stHtml}<span class="timer" title="Shift timer from the dialer">${esc(timer)}</span></div>
       <div class="clocks">
@@ -1026,6 +1062,7 @@
         <button class="btn green" data-act="ck-now" data-v="in" ${st === 'in' ? 'disabled' : ''}>${ICON.login} Clock in now</button>
         <button class="btn gray" data-act="ck-now" data-v="out" ${st === 'out' ? 'disabled' : ''}>${ICON.logout} Clock out now</button>
       </div>
+      ${brkHtml}
       <div class="next">${next}</div>
       ${today ? `<div class="today">${today}</div>` : ''}`;
   }
@@ -1054,6 +1091,15 @@
           <div class="field"><label class="inp">${ICON.user}<select id="ckSup">${supOpts.join('')}</select></label>
             <button class="btn ghost sm" data-act="ck-sup" title="Change the supervisor in the dialer now">Set now</button></div>
         </div>
+        <div><div class="flab" style="display:flex;justify-content:space-between">Breaks (tea cup)
+            <a class="lnk" data-act="ck-addbrk">+ Add break</a></div>
+          ${(cfg.breaks || []).map((b, i) => `<div class="brow">
+            <label class="inp"><input type="time" class="brStart" value="${esc(b.start)}"></label>
+            <label class="inp"><select class="brLen">${[5, 10, 15, 20, 30, 45, 60].map(m =>
+              `<option value="${m}" ${Number(b.minutes) === m ? 'selected' : ''}>${m} min</option>`).join('')}</select></label>
+            <button class="rm" data-act="ck-rmbrk" data-v="${i}" title="Remove">${ICON.x}</button></div>`).join('')
+            || '<div class="hint">No scheduled breaks.</div>'}
+        </div>
         <div><div class="flab">Use time from</div><div class="seg">
           <button data-act="ck-src" data-v="dialer" class="${cfg.source === 'dialer' ? 'on' : ''}">Dialer time</button>
           <button data-act="ck-src" data-v="system" class="${cfg.source === 'system' ? 'on' : ''}">Computer time</button></div></div>
@@ -1076,7 +1122,9 @@
       outTime: $('ckOut').value || old.outTime,
       supervisor: $('ckSup').value,
       warnMin: Number($('ckWarn').value),
-      graceMin: Number($('ckGrace').value)
+      graceMin: Number($('ckGrace').value),
+      breaks: [...shadow.querySelectorAll('.brow')].map(r => ({
+        start: r.querySelector('.brStart').value || '12:00', minutes: Number(r.querySelector('.brLen').value) }))
     }, patch || {});
     await chrome.storage.local.set({ clock: cfg });
     // Don't fire for times that already passed today when the schedule changes.
@@ -1098,13 +1146,32 @@
         const days = cfg.days.includes(d) ? cfg.days.filter(x => x !== d) : cfg.days.concat(d).sort();
         await saveClockForm(false, { days });
         renderClockForm(true);
+      } else if (act === 'ck-addbrk' || act === 'ck-rmbrk') {
+        const { cfg } = await daGetClock();
+        const breaks = (cfg.breaks || []).slice();
+        if (act === 'ck-addbrk') breaks.push({ start: '12:00', minutes: 15 });
+        else breaks.splice(Number(v), 1);
+        await chrome.storage.local.set({ clock: Object.assign({}, cfg, { breaks }) });
+        renderClockForm(true);
+      } else if (act === 'br-start' || act === 'br-end' || act === 'br-ext') {
+        if (btn) btn.disabled = true;
+        let msg;
+        if (act === 'br-ext') { await SDC.extendBreak(Number(v)); msg = `Break extended by ${v} min`; }
+        else if (act === 'br-end') msg = await SDC.endBreak();
+        else {
+          const minutes = Number(shadow.getElementById('brMin').value);
+          const ui = loadUi(); ui.brMin = minutes; saveUi(ui);
+          msg = await SDC.startBreak(minutes);
+        }
+        clockMsg = { text: msg, at: Date.now() };
+        toast(msg);
       } else if (act === 'ck-src') {
         await saveClockForm(false, { source: v });
         renderClockForm(true);
       } else if (act === 'ck-skip' || act === 'ck-unskip') {
         const plan = daClockPlan(await daGetClock());
         await SDC.skip(plan.key, v, act === 'ck-skip');
-        await daLog('clock', `${act === 'ck-skip' ? 'Skipped' : 'Un-skipped'} today's ${KIND[v].toLowerCase()}.`);
+        await daLog('clock', `${act === 'ck-skip' ? 'Skipped' : 'Un-skipped'} today's ${daKindLabel(v).toLowerCase()}.`);
         liveTick();
       } else if (act === 'ck-readsup') {
         toast('Reading supervisors…');
@@ -1140,11 +1207,14 @@
     const today = activity.filter(a => a.t >= startOfDay.getTime());
     const count = k => today.filter(a => a.kind === k).length;
     const runs = today.filter(a => a.kind === 'run' && !a.error).length;
+    const brk = (clockState && clockState.breakState) || {};
+    const brkMs = today.reduce((t, a) => t + (a.breakMs || 0), 0) + (brk.on ? Date.now() - brk.since : 0);
     els.stats.innerHTML = `
       <div class="stat"><b>${count('lookup')}</b><small>Lookups</small></div>
+      <div class="stat"><b>${Math.round(brkMs / 60000)}m</b><small>On break</small></div>
       <div class="stat"><b>${runs}</b><small>Runs done</small></div>
       <div class="stat"><b>${count('call')}</b><small>Zoiper calls</small></div>`;
-    const icon = { lookup: ICON.search, run: ICON.play, call: ICON.phone, clock: ICON.clock, search: ICON.search };
+    const icon = { break: ICON.cup, lookup: ICON.search, run: ICON.play, call: ICON.phone, clock: ICON.clock, search: ICON.search };
     els.log.innerHTML = activity.slice(0, 80).map(a => `
       <div class="li ${a.error ? 'err' : a.ok ? 'ok' : ''}"><span class="ic">${icon[a.kind] || ICON.list}</span>
         <span class="tx">${esc(a.text)}</span><time>${new Date(a.t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</time></div>`).join('')
@@ -1197,7 +1267,8 @@
       window.SDClock.start({
         isJobRunning: () => { const j = loadJob(); return !!(j && j.running); },
         onEvent: ev => {
-          if (ev.phase === 'start') clockMsg = { text: `${ev.kind === 'in' ? 'Clocking in' : 'Clocking out'}…`, at: Date.now() };
+          const starting = { in: 'Clocking in', out: 'Clocking out', break: 'Starting break', 'break-end': 'Ending break' };
+          if (ev.phase === 'start') clockMsg = { text: `${starting[ev.kind] || 'Working'}…`, at: Date.now() };
           else clockMsg = { text: ev.msg, err: ev.phase === 'error', at: Date.now() };
           liveTick();
         }
