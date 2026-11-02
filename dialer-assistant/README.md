@@ -28,6 +28,22 @@ A **Sean's Dialer** panel floats over the dialer pages.
    - search again → Select → Finish → **stops on the disposition page** for the agent.
 4. **Stop** halts a run. If a step can't find something within 20 s, the run stops and the panel names the missing item.
 
+## Time Clock tab
+- Shows whether you're **clocked in or out**, the dialer's shift timer, and the **dialer's time next to this PC's time**
+  (the dialer clock is read from the top bar).
+- **Clock in now / Clock out now** buttons, and **Set now** to change the supervisor right away.
+- **Schedule**: turn on *Automatic clock in / out*, pick the clock-in and clock-out times, the days, the
+  **supervisor in charge** (the list is read from the dialer's Time Clock dialog; use *Refresh list* if it's empty),
+  and whether the times are **dialer time** or **computer time**.
+- A countdown banner appears before each event (*Warn before*), with **Skip today**. If Edge was busy or the tab
+  was closed, it still acts if it's no more than *Late by up to* minutes late; after that it's logged as missed.
+- Keep Edge running. If no dialer tab is open, one is opened a few minutes before the event. A desktop notification
+  confirms each scheduled clock in/out (or says why it failed).
+- A manual clock in/out stands in for that day's scheduled one.
+
+## Activity tab
+Today's counts (lookups, finished runs, Zoiper calls) and a log of lookups, runs, calls and time clock actions.
+
 ## Zoiper 5: look up the caller automatically
 Zoiper can open a web address when a call comes in. The extension uses that to receive the caller's number with no copy/paste.
 

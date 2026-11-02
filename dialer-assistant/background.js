@@ -11,6 +11,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     forwardCall(msg.phone, sender.tab).then(sendResponse);
     return true;
   }
+  if (msg.type === 'notify') {
+    chrome.notifications.create({
+      type: 'basic', iconUrl: 'icons/icon128.png', title: msg.title, message: msg.message || '', priority: 1
+    });
+  }
   if (msg.type === 'openOptions') {
     chrome.runtime.openOptionsPage();
   }
@@ -40,6 +45,24 @@ async function forwardCall(phone, fromTab) {
   }
   return { handleHere: true };
 }
+
+// Time clock safety net: the clock in/out itself happens in a dialer tab, so
+// make sure one is open shortly before a scheduled event.
+chrome.alarms.create('clock-check', { periodInMinutes: 1 });
+chrome.alarms.onAlarm.addListener(async alarm => {
+  if (alarm.name !== 'clock-check') return;
+  const state = await daGetClock();
+  if (!state.cfg.enabled) return;
+  const soon = daClockPlan(state).today.find(e =>
+    ['upcoming', 'warn', 'due'].includes(e.status) && e.at - Date.now() < 3 * 60000);
+  if (!soon) return;
+  const tabs = await chrome.tabs.query({ url: DIALER_URLS });
+  if (tabs.length) return;
+  const { lastOrigin, settings } = await chrome.storage.local.get(['lastOrigin', 'settings']);
+  const path = (settings && settings.searchPath) || DA_DEFAULTS.searchPath;
+  chrome.tabs.create({ url: (lastOrigin || 'http://proxy2.alliancedialer.com') + path, active: false });
+  daLog('clock', `Opened a dialer tab for the scheduled clock ${soon.kind}.`);
+});
 
 chrome.commands.onCommand.addListener(async (command, tab) => {
   if (command === 'focus-phone' && tab) chrome.tabs.sendMessage(tab.id, { type: 'focusPhone' }).catch(() => {});

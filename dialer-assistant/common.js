@@ -78,3 +78,90 @@ async function daLookup(phone) {
     req.onerror = () => reject(req.error);
   });
 }
+
+// ---- Time clock schedule (shared by the content script and background) ----
+const DA_CLOCK_DEFAULTS = {
+  enabled: false,
+  inTime: '09:00',
+  outTime: '17:00',
+  days: [1, 2, 3, 4, 5], // 0 = Sunday
+  supervisor: '', // '' = leave whatever the dialer has selected
+  source: 'dialer', // 'dialer' (time shown in the dialer's top bar) or 'system'
+  warnMin: 1, // countdown shown before acting
+  graceMin: 15 // still act if the tab was closed/asleep at the exact minute
+};
+
+async function daGetClock() {
+  const s = await chrome.storage.local.get(['clock', 'dialerClock', 'clockDone']);
+  return {
+    cfg: Object.assign({}, DA_CLOCK_DEFAULTS, s.clock || {}),
+    // offsetMs: dialer wall clock minus this computer's wall clock
+    offsetMs: (s.dialerClock && s.dialerClock.offsetMs) || 0,
+    hasDialerClock: !!s.dialerClock,
+    done: s.clockDone || {}
+  };
+}
+
+// "Wall" Date for the chosen time source: read it with getHours()/getDay().
+function daWallNow(source, offsetMs, now = Date.now()) {
+  return new Date(now + (source === 'dialer' ? offsetMs : 0));
+}
+
+function daDateKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function daHmToMin(hm) {
+  const m = /^(\d{1,2}):(\d{2})/.exec(hm || '');
+  return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+}
+
+function daFmtHm(hm) {
+  const min = daHmToMin(hm);
+  if (min == null) return '';
+  const h = Math.floor(min / 60), m = min % 60;
+  return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
+}
+
+// Today's clock events with their status, plus the next upcoming event (within a week).
+// status: upcoming | warn | due | done | skipped | missed | off
+function daClockPlan({ cfg, offsetMs, done }, now = Date.now()) {
+  const wall = daWallNow(cfg.source, offsetMs, now);
+  const key = daDateKey(wall);
+  const nowMin = wall.getHours() * 60 + wall.getMinutes() + wall.getSeconds() / 60;
+  const todayOn = cfg.enabled && cfg.days.includes(wall.getDay());
+  const rec = done[key] || {};
+  const today = ['in', 'out'].map(kind => {
+    const tMin = daHmToMin(kind === 'in' ? cfg.inTime : cfg.outTime);
+    const at = now + (tMin - nowMin) * 60000; // real ms of the event
+    let status = 'upcoming';
+    if (!todayOn || tMin == null) status = 'off';
+    else if (rec[kind]) status = 'done';
+    else if (rec['skip_' + kind]) status = 'skipped';
+    else if (nowMin >= tMin + cfg.graceMin) status = 'missed';
+    else if (nowMin >= tMin) status = 'due';
+    else if (nowMin >= tMin - cfg.warnMin) status = 'warn';
+    return { kind, at, status, key, result: rec[kind] };
+  });
+  let next = today.filter(e => ['upcoming', 'warn', 'due'].includes(e.status)).sort((a, b) => a.at - b.at)[0];
+  if (!next && cfg.enabled) {
+    for (let d = 1; d <= 7 && !next; d++) {
+      const w = new Date(wall.getFullYear(), wall.getMonth(), wall.getDate() + d);
+      if (!cfg.days.includes(w.getDay())) continue;
+      const kinds = ['in', 'out'].map(kind => ({ kind, min: daHmToMin(kind === 'in' ? cfg.inTime : cfg.outTime) }))
+        .filter(k => k.min != null).sort((a, b) => a.min - b.min);
+      if (kinds.length) {
+        const dayStartReal = now + (w.getTime() - wall.getTime());
+        next = { kind: kinds[0].kind, at: dayStartReal + kinds[0].min * 60000, status: 'upcoming', key: daDateKey(w) };
+      }
+    }
+  }
+  return { today, next, key };
+}
+
+// ---- Activity log ----
+async function daLog(kind, text, extra) {
+  const { activity = [] } = await chrome.storage.local.get('activity');
+  activity.unshift(Object.assign({ t: Date.now(), kind, text }, extra || {}));
+  await chrome.storage.local.set({ activity: activity.slice(0, 300) });
+}

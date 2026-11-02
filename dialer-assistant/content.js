@@ -200,10 +200,15 @@
   }
   function stopJob(message, isError) {
     const job = loadJob() || {};
+    const wasRunning = job.running;
     job.running = false;
     job.message = message;
     job.error = !!isError;
     saveJob(job);
+    if (wasRunning) {
+      const what = job.type === 'run' ? `Run ${job.ctrl}: ${message}` : message;
+      daLog(job.type === 'run' ? 'run' : 'search', what, { error: !!isError, ok: !isError && /^Done/.test(message) });
+    }
   }
 
   async function startRun(ctrl) {
@@ -423,7 +428,15 @@
     max: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
     x: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
     search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
-    check: '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
+    check: '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    clock: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+    list: '<svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>',
+    phone: '<svg viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>',
+    login: '<svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>',
+    logout: '<svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>',
+    user: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
+    refresh: '<svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4L21 8M21 3v5h-5"/></svg>',
+    alert: '<svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>'
   };
 
   const CSS = `
@@ -431,50 +444,82 @@
     * { box-sizing: border-box; font-family: "Segoe UI", system-ui, Arial, sans-serif; }
     svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
     .panel { --blue: #2563eb; --blue-d: #1d4ed8; --ink: #0f172a; --mut: #64748b; --line: #e2e8f0; --soft: #f8fafc;
+      --green: #16a34a; --red: #dc2626; --amber: #d97706;
       position: relative; display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; background: #fff; color: var(--ink);
-      border: 1px solid #cbd5e1; border-radius: 12px; box-shadow: 0 12px 32px rgba(15,23,42,.22), 0 2px 6px rgba(15,23,42,.08);
-      overflow: hidden; font-size: 13px; }
-    .head { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 12px; background: linear-gradient(180deg, #2563eb, #1d4ed8);
-      color: #fff; cursor: grab; user-select: none; flex: none; }
+      border: 1px solid rgba(15,23,42,.18); border-radius: 14px; overflow: hidden; font-size: 13px;
+      box-shadow: 0 18px 40px rgba(15,23,42,.28), 0 2px 8px rgba(15,23,42,.10); }
+    /* header */
+    .head { display: flex; align-items: center; gap: 10px; padding: 9px 8px 9px 10px; flex: none; user-select: none; cursor: grab; color: #fff;
+      background: radial-gradient(120% 140% at 0% 0%, #3b82f6 0%, #1e3a8a 55%, #0f172a 100%); }
     .head:active { cursor: grabbing; }
-    .title { font-weight: 600; font-size: 13px; flex: 1; display: flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: #93c5fd; flex: none; }
+    .logo { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; font-weight: 800; font-size: 12px; letter-spacing: .02em;
+      background: linear-gradient(135deg, #fff, #c7d2fe); color: #1e3a8a; box-shadow: inset 0 -2px 0 rgba(30,58,138,.15); flex: none; }
+    .ttl { flex: 1; min-width: 0; line-height: 1.15; }
+    .name { font-weight: 700; font-size: 13.5px; display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+    .hsub { font-size: 11px; color: #c7d2fe; display: flex; gap: 8px; align-items: center; white-space: nowrap; overflow: hidden; }
+    .hsub b { color: #fff; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .pill { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 1px 7px; font-size: 10.5px; font-weight: 700; letter-spacing: .03em; }
+    .pill.in { background: rgba(34,197,94,.22); color: #bbf7d0; } .pill.out { background: rgba(148,163,184,.25); color: #e2e8f0; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #93c5fd; flex: none; box-shadow: 0 0 0 2px rgba(255,255,255,.15); }
     .dot.run { background: #fde047; animation: pulse 1s infinite; }
     .dot.ok { background: #4ade80; } .dot.err { background: #f87171; }
     @keyframes pulse { 50% { opacity: .35; } }
-    .hbtn { background: transparent; border: 0; color: #fff; width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center; cursor: pointer; padding: 0; }
-    .hbtn:hover { background: rgba(255,255,255,.18); }
-    .body { flex: 1; overflow: auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
-    .collapsed .body { display: none; }
-    .lbl { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--mut); margin-bottom: 5px; }
+    .hbtn { background: transparent; border: 0; color: #fff; width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; cursor: pointer; padding: 0; }
+    .hbtn:hover { background: rgba(255,255,255,.16); }
+    /* tabs */
+    .tabs { display: flex; gap: 2px; padding: 0 8px; background: #f1f5f9; border-bottom: 1px solid var(--line); flex: none; }
+    .tab { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 0; background: none; cursor: pointer;
+      padding: 9px 4px 8px; font-size: 12.5px; font-weight: 600; color: var(--mut); border-bottom: 2px solid transparent; white-space: nowrap; }
+    .tab:hover { color: var(--ink); }
+    .tab.on { color: var(--blue-d); border-bottom-color: var(--blue); }
+    .badge { font-size: 10px; background: #dbeafe; color: var(--blue-d); border-radius: 999px; padding: 0 6px; font-weight: 700; }
+    .badge:empty { display: none; }
+    .body { flex: 1; overflow: auto; padding: 12px; }
+    .pane { display: none; flex-direction: column; gap: 12px; } .pane.on { display: flex; }
+    .collapsed .body, .collapsed .tabs { display: none; }
+    /* banner (clock countdown etc.) */
+    .banner { display: none; align-items: center; gap: 8px; padding: 8px 10px; font-size: 12.5px; font-weight: 600; flex: none; }
+    .banner.on { display: flex; }
+    .banner.warn { background: #fffbeb; color: #92400e; border-bottom: 1px solid #fde68a; }
+    .banner.ok { background: #f0fdf4; color: #166534; border-bottom: 1px solid #bbf7d0; }
+    .banner.err { background: #fef2f2; color: #991b1b; border-bottom: 1px solid #fecaca; }
+    .banner .sp { flex: 1; }
+    .lbl { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--mut); margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+    .lbl a { text-transform: none; letter-spacing: 0; font-weight: 600; }
     .field { display: flex; gap: 6px; }
-    .inp { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0 8px; background: #fff; }
+    .inp { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; border: 1px solid #cbd5e1; border-radius: 9px; padding: 0 9px; background: #fff; transition: .15s; }
     .inp:focus-within { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
     .inp svg { color: var(--mut); }
-    input { flex: 1; min-width: 0; border: 0; outline: 0; padding: 8px 0; font-size: 14px; color: var(--ink); background: transparent; }
+    input, select { flex: 1; min-width: 0; border: 0; outline: 0; padding: 8px 0; font-size: 14px; color: var(--ink); background: transparent; }
+    select { cursor: pointer; }
+    input[type=time] { font-variant-numeric: tabular-nums; }
     .clear { border: 0; background: none; color: var(--mut); cursor: pointer; padding: 2px; display: grid; }
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; border: 0; border-radius: 8px; padding: 8px 12px;
-      background: var(--blue); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 0; border-radius: 9px; padding: 8px 12px;
+      background: var(--blue); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: .15s;
+      box-shadow: 0 1px 2px rgba(15,23,42,.12); }
     .btn:hover { background: var(--blue-d); }
-    .btn.ghost { background: #eef2ff; color: var(--blue-d); }
-    .btn.ghost:hover { background: #e0e7ff; }
-    .btn.danger { background: #fee2e2; color: #b91c1c; } .btn.danger:hover { background: #fecaca; }
-    .btn.sm { padding: 5px 9px; font-size: 12px; }
+    .btn:disabled { opacity: .5; cursor: default; }
+    .btn.ghost { background: #eef2ff; color: var(--blue-d); box-shadow: none; } .btn.ghost:hover { background: #e0e7ff; }
+    .btn.green { background: var(--green); } .btn.green:hover { background: #15803d; }
+    .btn.gray { background: #475569; } .btn.gray:hover { background: #334155; }
+    .btn.danger { background: #fee2e2; color: #b91c1c; box-shadow: none; } .btn.danger:hover { background: #fecaca; }
+    .btn.sm { padding: 5px 9px; font-size: 12px; } .btn.block { width: 100%; }
     .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
     .chip { border: 1px solid var(--line); background: var(--soft); border-radius: 999px; padding: 2px 9px; font-size: 11.5px; color: #334155; cursor: pointer; }
     .chip:hover { border-color: #93c5fd; }
     .list { display: flex; flex-direction: column; gap: 6px; }
-    .card { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--soft); }
+    .card { display: flex; align-items: center; gap: 8px; padding: 9px 8px 9px 11px; border: 1px solid var(--line); border-radius: 11px; background: var(--soft); }
     .card .main { flex: 1; min-width: 0; }
     .ctrl { font-family: Consolas, "Cascadia Mono", monospace; font-size: 16px; font-weight: 700; letter-spacing: .02em; cursor: copy; }
     .sub { font-size: 11.5px; color: var(--mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .ibtn { width: 32px; height: 32px; padding: 0; }
     .meta { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; color: var(--mut); }
-    .empty { padding: 10px; border: 1px dashed #cbd5e1; border-radius: 10px; color: #475569; display: flex; flex-direction: column; gap: 8px; }
+    .empty { padding: 10px; border: 1px dashed #cbd5e1; border-radius: 11px; color: #475569; display: flex; flex-direction: column; gap: 8px; }
     .empty b { color: var(--ink); }
-    .prog { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
-    .prog-h { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: var(--soft); border-bottom: 1px solid var(--line); font-weight: 600; }
-    .steps { list-style: none; margin: 0; padding: 6px 10px; }
+    .box { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+    .box-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 11px; background: var(--soft); border-bottom: 1px solid var(--line); font-weight: 700; font-size: 12.5px; }
+    .box-b { padding: 10px 11px; display: flex; flex-direction: column; gap: 10px; }
+    .steps { list-style: none; margin: 0; padding: 6px 11px; }
     .steps li { display: flex; align-items: center; gap: 9px; padding: 5px 0; color: var(--mut); }
     .steps li.active { color: var(--ink); font-weight: 600; } .steps li.done { color: #15803d; } .steps li.fail { color: #b91c1c; }
     .si { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #cbd5e1; display: grid; place-items: center; flex: none; font-size: 10px; }
@@ -482,14 +527,56 @@
     .active .si { border-color: var(--blue); border-top-color: transparent; animation: spin .8s linear infinite; }
     .fail .si { border-color: #ef4444; background: #ef4444; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .msg { padding: 8px 10px; font-size: 12px; border-top: 1px solid var(--line); color: #334155; }
+    .msg { padding: 8px 11px; font-size: 12px; border-top: 1px solid var(--line); color: #334155; }
     .msg.ok { background: #f0fdf4; color: #166534; } .msg.err { background: #fef2f2; color: #b91c1c; }
     .foot { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; color: var(--mut); gap: 8px; }
-    .foot a { color: var(--blue); cursor: pointer; text-decoration: none; } .foot a:hover { text-decoration: underline; }
+    a.lnk, .foot a { color: var(--blue); cursor: pointer; text-decoration: none; font-size: 11.5px; } a.lnk:hover, .foot a:hover { text-decoration: underline; }
     .warn { color: #b45309; }
     details summary { cursor: pointer; font-size: 12px; color: var(--mut); list-style: none; }
     details summary::before { content: "▸ "; } details[open] summary::before { content: "▾ "; }
     details .field { margin-top: 6px; }
+    /* time clock */
+    .status { display: flex; align-items: center; gap: 10px; }
+    .big { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 800; padding: 5px 11px; border-radius: 999px; }
+    .big.in { background: #dcfce7; color: #166534; } .big.out { background: #f1f5f9; color: #475569; } .big.unk { background: #fef3c7; color: #92400e; }
+    .big i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; display: block; }
+    .timer { font-family: Consolas, monospace; font-size: 15px; font-weight: 700; color: var(--ink); margin-left: auto; }
+    .clocks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .clk { border: 1px solid var(--line); border-radius: 10px; padding: 7px 9px; background: var(--soft); }
+    .clk.sel { border-color: #93c5fd; background: #eff6ff; }
+    .clk small { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--mut); }
+    .clk b { font-size: 16px; font-variant-numeric: tabular-nums; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .next { font-size: 12.5px; color: #334155; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .next b { color: var(--ink); }
+    .today { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+    .today div { display: flex; align-items: center; gap: 7px; color: #475569; }
+    .tag { font-size: 10.5px; font-weight: 700; border-radius: 999px; padding: 1px 7px; background: #f1f5f9; color: #475569; text-transform: uppercase; letter-spacing: .03em; }
+    .tag.done { background: #dcfce7; color: #166534; } .tag.missed { background: #fee2e2; color: #991b1b; }
+    .tag.due, .tag.warn { background: #fef3c7; color: #92400e; } .tag.skipped { background: #e2e8f0; color: #475569; }
+    .switch { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-weight: 600; cursor: pointer; }
+    .switch input { display: none; }
+    .switch span.t { width: 38px; height: 22px; border-radius: 999px; background: #cbd5e1; position: relative; transition: .2s; flex: none; }
+    .switch span.t::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: .2s; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+    .switch input:checked + span.t { background: var(--green); } .switch input:checked + span.t::after { left: 19px; }
+    .days { display: flex; gap: 4px; }
+    .day { flex: 1; border: 1px solid #cbd5e1; background: #fff; border-radius: 8px; padding: 5px 0; font-size: 12px; font-weight: 700; color: #475569; cursor: pointer; }
+    .day.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .seg { display: flex; background: #f1f5f9; border-radius: 9px; padding: 3px; gap: 3px; }
+    .seg button { flex: 1; border: 0; background: none; border-radius: 7px; padding: 6px 4px; font-size: 12px; font-weight: 600; color: #475569; cursor: pointer; }
+    .seg button.on { background: #fff; color: var(--blue-d); box-shadow: 0 1px 3px rgba(15,23,42,.15); }
+    .flab { font-size: 11.5px; font-weight: 600; color: #475569; margin-bottom: 4px; }
+    .hint { font-size: 11.5px; color: var(--mut); }
+    /* activity */
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .stat { border: 1px solid var(--line); border-radius: 10px; padding: 7px 8px; background: var(--soft); text-align: center; }
+    .stat b { display: block; font-size: 18px; } .stat small { font-size: 10.5px; color: var(--mut); font-weight: 600; }
+    .log { display: flex; flex-direction: column; }
+    .li { display: flex; gap: 8px; padding: 7px 2px; border-bottom: 1px solid #f1f5f9; font-size: 12px; align-items: flex-start; }
+    .li .ic { width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; background: #eef2ff; color: var(--blue-d); flex: none; }
+    .li .ic svg { width: 12px; height: 12px; }
+    .li.err .ic { background: #fee2e2; color: #b91c1c; } .li.ok .ic { background: #dcfce7; color: #166534; }
+    .li .tx { flex: 1; min-width: 0; color: #334155; } .li time { color: var(--mut); font-size: 11px; white-space: nowrap; font-variant-numeric: tabular-nums; }
     .rz { position: absolute; z-index: 2; }
     .rz.n, .rz.s { left: 10px; right: 10px; height: 6px; cursor: ns-resize; }
     .rz.e, .rz.w { top: 10px; bottom: 10px; width: 6px; cursor: ew-resize; }
@@ -501,12 +588,13 @@
       border-right: 2px solid #94a3b8; border-bottom: 2px solid #94a3b8; border-bottom-right-radius: 3px; }
     .collapsed .rz { display: none; }
     .toast { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%) translateY(8px); background: #0f172a; color: #fff;
-      padding: 6px 12px; border-radius: 999px; font-size: 12px; opacity: 0; pointer-events: none; transition: .18s; white-space: nowrap; }
+      padding: 7px 13px; border-radius: 999px; font-size: 12px; opacity: 0; pointer-events: none; transition: .18s; white-space: nowrap; z-index: 3; }
     .toast.show { opacity: 1; transform: translateX(-50%); }
   `;
 
-  const MIN_W = 270, MIN_H = 200, DEF_W = 330, MARGIN = 8;
+  const MIN_W = 290, MIN_H = 220, DEF_W = 350, MARGIN = 8;
   let shadow, els, host, layout, toastTimer, dataInfo = null;
+  let clockState = null, supervisors = { list: [], current: '' }, activity = [], clockMsg = null;
 
   function buildPanel() {
     host = document.createElement('div');
@@ -516,30 +604,54 @@
     shadow.innerHTML = `<style>${CSS}</style>
       <div class="panel">
         <div class="head" id="head">
-          <div class="title"><span class="dot" id="dot"></span><span>Sean's Dialer</span></div>
+          <div class="logo">SD</div>
+          <div class="ttl">
+            <div class="name">Sean's Dialer <span class="dot" id="dot"></span></div>
+            <div class="hsub" id="hsub"></div>
+          </div>
           <button class="hbtn" id="opts" title="Settings / import data">${ICON.gear}</button>
           <button class="hbtn" id="tog" title="Minimize">${ICON.min}</button>
         </div>
+        <div id="bannerWrap"></div>
+        <nav class="tabs">
+          <button class="tab" data-tab="lookup">${ICON.search} Lookup</button>
+          <button class="tab" data-tab="clock">${ICON.clock} Time Clock <span class="badge" id="clockBadge"></span></button>
+          <button class="tab" data-tab="log">${ICON.list} Activity</button>
+        </nav>
         <div class="body">
-          <div>
-            <div class="lbl">Caller phone</div>
-            <div class="field">
-              <label class="inp">${ICON.search}<input id="phone" placeholder="Paste or type a number" autocomplete="off">
-                <button class="clear" id="clr" title="Clear">${ICON.x}</button></label>
-              <button class="btn" id="lookup">Find</button>
+          <section class="pane" data-pane="lookup">
+            <div>
+              <div class="lbl">Caller phone</div>
+              <div class="field">
+                <label class="inp">${ICON.phone}<input id="phone" placeholder="Paste or type a number" autocomplete="off">
+                  <button class="clear" id="clr" title="Clear">${ICON.x}</button></label>
+                <button class="btn" id="lookup">Find</button>
+              </div>
+              <div class="chips" id="recent"></div>
             </div>
-            <div class="chips" id="recent"></div>
-          </div>
-          <div id="results"></div>
-          <div id="progress"></div>
-          <details id="manual">
-            <summary>Run with a control number</summary>
-            <div class="field">
-              <label class="inp"><input id="ctrl" placeholder="Control #" autocomplete="off"></label>
-              <button class="btn" id="runManual">${ICON.play} Run</button>
+            <div id="results"></div>
+            <div id="progress"></div>
+            <details id="manual">
+              <summary>Run with a control number</summary>
+              <div class="field">
+                <label class="inp"><input id="ctrl" placeholder="Control #" autocomplete="off"></label>
+                <button class="btn" id="runManual">${ICON.play} Run</button>
+              </div>
+            </details>
+            <div class="foot"><span id="data"></span><a id="opts2">Settings</a></div>
+          </section>
+          <section class="pane" data-pane="clock">
+            <div class="box"><div class="box-b" id="ckLive"></div></div>
+            <div class="box">
+              <div class="box-h"><span style="display:flex;align-items:center;gap:7px">${ICON.clock} Schedule</span></div>
+              <div class="box-b" id="ckForm"></div>
             </div>
-          </details>
-          <div class="foot"><span id="data"></span><a id="opts2">Settings</a></div>
+          </section>
+          <section class="pane" data-pane="log">
+            <div class="stats" id="stats"></div>
+            <div class="lbl">Recent activity <a class="lnk" data-act="clear-log">Clear</a></div>
+            <div class="log" id="log"></div>
+          </section>
         </div>
         ${['n', 's', 'e', 'w', 'nw', 'ne', 'sw', 'se'].map(d => `<div class="rz ${d}" data-rz="${d}"></div>`).join('')}
         <div class="toast" id="toast"></div>
@@ -548,7 +660,9 @@
 
     const $ = id => shadow.getElementById(id);
     els = { panel: shadow.querySelector('.panel'), phone: $('phone'), results: $('results'), progress: $('progress'),
-            recent: $('recent'), ctrl: $('ctrl'), dot: $('dot'), tog: $('tog'), data: $('data'), toast: $('toast') };
+            recent: $('recent'), ctrl: $('ctrl'), dot: $('dot'), tog: $('tog'), data: $('data'), toast: $('toast'),
+            hsub: $('hsub'), bannerWrap: $('bannerWrap'), ckLive: $('ckLive'), ckForm: $('ckForm'), clockBadge: $('clockBadge'),
+            stats: $('stats'), log: $('log') };
 
     $('tog').onclick = () => setCollapsed(!loadUi().collapsed);
     $('opts').onclick = $('opts2').onclick = () => chrome.runtime.sendMessage({ type: 'openOptions' });
@@ -571,6 +685,13 @@
     els.ctrl.onkeydown = e => { if (e.key === 'Enter') $('runManual').click(); };
 
     shadow.addEventListener('click', e => {
+      const tab = e.target.closest('[data-tab]');
+      if (tab) {
+        const ui = loadUi();
+        ui.tab = tab.dataset.tab;
+        saveUi(ui);
+        return;
+      }
       const b = e.target.closest('[data-act]');
       if (!b) return;
       const { act, v } = b.dataset;
@@ -584,20 +705,28 @@
       }
       else if (act === 'stop') stopJob('Stopped by user.');
       else if (act === 'dismiss') { sessionStorage.removeItem(JOB_KEY); render(); }
+      else if (act === 'clear-log') chrome.storage.local.set({ activity: [] });
+      else clockAction(act, v, b);
     });
+    els.ckForm.addEventListener('change', () => saveClockForm(false));
 
     initDragResize($('head'));
 
     const ui = loadUi();
     if (ui.phone) els.phone.value = ui.phone;
-    chrome.storage.local.get(['panelLayout', 'importInfo']).then(st => {
+    chrome.storage.local.get(['panelLayout', 'importInfo', 'supervisors', 'activity']).then(st => {
       dataInfo = st.importInfo || null;
       layout = st.panelLayout || {};
+      supervisors = st.supervisors || supervisors;
+      activity = st.activity || [];
       applyLayout();
       render();
     });
     chrome.storage.onChanged.addListener(ch => {
       if (ch.importInfo) { dataInfo = ch.importInfo.newValue || null; render(); }
+      if (ch.supervisors) { supervisors = ch.supervisors.newValue || supervisors; renderClockForm(false); }
+      if (ch.activity) { activity = ch.activity.newValue || []; renderLog(); }
+      if (ch.clock) renderClockForm(false);
     });
     window.addEventListener('resize', () => applyLayout());
     // Content grows/shrinks with results: keep the panel fully on screen.
@@ -607,6 +736,9 @@
       if (h !== lastH && layout) { lastH = h; applyLayout(); }
     }).observe(host);
     render();
+    renderClockForm(true);
+    setInterval(liveTick, 1000);
+    liveTick();
   }
 
   // ---- position & size (drag the header, resize from the corner grip) ----
@@ -716,6 +848,7 @@
     ui.note = res && !res.ok ? `Lookup error: ${res.error}` : '';
     ui.recent = [phone].concat((ui.recent || []).filter(p => p !== phone)).slice(0, 5);
     saveUi(ui);
+    daLog('lookup', `Looked up ${fmtPhone(phone)}: ${ui.results.length ? ui.results.map(r => r.ctrl).join(', ') : ui.names.length ? 'name only (' + ui.names.join(', ') + ')' : 'no match'}`);
     if (ui.results.length === 1) {
       copyText(ui.results[0].ctrl);
       toast(`Copied ${ui.results[0].ctrl}`);
@@ -795,6 +928,9 @@
     els.panel.classList.toggle('collapsed', !!ui.collapsed);
     els.tog.innerHTML = ui.collapsed ? ICON.max : ICON.min;
     els.tog.title = ui.collapsed ? 'Expand' : 'Minimize';
+    const tab = ui.tab || 'lookup';
+    for (const t of shadow.querySelectorAll('[data-tab]')) t.classList.toggle('on', t.dataset.tab === tab);
+    for (const p of shadow.querySelectorAll('[data-pane]')) p.classList.toggle('on', p.dataset.pane === tab);
 
     els.dot.className = 'dot' + (job && job.running ? ' run' : job && job.error ? ' err' : job && job.message && /^Done/.test(job.message) ? ' ok' : '');
 
@@ -807,6 +943,212 @@
     els.data.innerHTML = dataInfo
       ? `${dataInfo.phones.toLocaleString()} phones loaded`
       : '<span class="warn">No cellphone data imported yet</span>';
+    renderLog();
+  }
+
+  // ---------- Time Clock tab ----------
+  const SDC = window.SDClock;
+  const fmtTime = (d, sec = true) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: sec ? '2-digit' : undefined });
+  const KIND = { in: 'Clock in', out: 'Clock out' };
+
+  function fmtIn(ms) {
+    const s = Math.max(0, Math.round(ms / 1000));
+    if (s < 60) return `${s}s`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m ${String(s % 60).padStart(2, '0')}s`;
+    const h = Math.floor(m / 60);
+    return h < 48 ? `${h}h ${m % 60}m` : `${Math.floor(h / 24)}d ${h % 24}h`;
+  }
+
+  function wallOf(at) { // real ms -> Date showing the chosen source's wall time
+    return daWallNow(clockState.cfg.source, clockState.offsetMs, at);
+  }
+
+  async function liveTick() {
+    clockState = await daGetClock();
+    const { cfg, offsetMs, hasDialerClock } = clockState;
+    const plan = daClockPlan(clockState);
+    const st = SDC ? SDC.status() : null;
+    const timer = SDC ? SDC.shiftTimer() : '';
+    const dialerNow = new Date(Date.now() + offsetMs);
+
+    // header line: dialer time + clock status
+    els.hsub.innerHTML = `${ICON.clock}<b>${hasDialerClock ? fmtTime(dialerNow) : fmtTime(new Date())}</b>` +
+      `<span>${hasDialerClock ? 'dialer' : 'PC'}</span>` +
+      (st ? `<span class="pill ${st}">${st === 'in' ? 'IN' : 'OUT'}${st === 'in' && timer ? ' ' + timer : ''}</span>` : '');
+
+    // countdown / result banner (shown on every tab, even minimized)
+    const warn = plan.today.find(e => e.status === 'warn' || e.status === 'due');
+    let banner = '';
+    if (warn) {
+      const left = warn.at - Date.now();
+      banner = `<div class="banner on warn">${ICON.alert}<span>${KIND[warn.kind]} ${left > 0 ? 'in ' + fmtIn(left) : 'now…'}</span><span class="sp"></span>
+        <button class="btn sm ghost" data-act="ck-skip" data-v="${warn.kind}">Skip today</button></div>`;
+    } else if (clockMsg && Date.now() - clockMsg.at < 15000) {
+      banner = `<div class="banner on ${clockMsg.err ? 'err' : 'ok'}">${clockMsg.err ? ICON.alert : ICON.check}<span>${esc(clockMsg.text)}</span></div>`;
+    }
+    if (els.bannerWrap.dataset.h !== banner) {
+      els.bannerWrap.innerHTML = banner;
+      els.bannerWrap.dataset.h = banner;
+    }
+    els.clockBadge.textContent = cfg.enabled && plan.next ? daFmtHm(`${wallOf(plan.next.at).getHours()}:${wallOf(plan.next.at).getMinutes()}`) : '';
+
+    if ((loadUi().tab || 'lookup') !== 'clock') return;
+    const pcNow = new Date();
+    const diffMin = Math.round(offsetMs / 60000);
+    const diffText = !hasDialerClock ? 'Dialer clock not seen yet (open the dialer page with the top bar).'
+      : Math.abs(diffMin) < 1 ? 'Dialer and PC clocks match.'
+      : `Dialer is ${fmtIn(Math.abs(offsetMs))} ${diffMin > 0 ? 'ahead of' : 'behind'} this PC.`;
+    const stHtml = st === 'in' ? '<span class="big in"><i></i>Clocked in</span>'
+      : st === 'out' ? '<span class="big out"><i></i>Clocked out</span>'
+      : '<span class="big unk"><i></i>Status unknown</span>';
+    let next = '<span class="hint">Automatic clock in/out is off.</span>';
+    if (cfg.enabled && plan.next) {
+      const w = wallOf(plan.next.at);
+      const isToday = plan.next.key === plan.key;
+      next = `${ICON.clock}<span>Next: <b>${KIND[plan.next.kind]}</b> ${isToday ? 'today' : w.toLocaleDateString([], { weekday: 'short' })} at <b>${fmtTime(w, false)}</b> · in ${fmtIn(plan.next.at - Date.now())}</span>`;
+    }
+    const today = cfg.enabled ? plan.today.filter(e => e.status !== 'off').map(e => {
+      const r = e.result && e.result.at ? ` · ${fmtTime(new Date(e.result.at), false)}` : '';
+      const skip = e.status === 'skipped'
+        ? `<a class="lnk" data-act="ck-unskip" data-v="${e.kind}">undo</a>`
+        : ['upcoming', 'warn'].includes(e.status) ? `<a class="lnk" data-act="ck-skip" data-v="${e.kind}">skip today</a>` : '';
+      return `<div><span class="tag ${e.status}">${e.status}</span>${KIND[e.kind]} ${daFmtHm(e.kind === 'in' ? cfg.inTime : cfg.outTime)}${r} ${skip}</div>`;
+    }).join('') : '';
+    els.ckLive.innerHTML = `
+      <div class="status">${stHtml}<span class="timer" title="Shift timer from the dialer">${esc(timer)}</span></div>
+      <div class="clocks">
+        <div class="clk ${cfg.source === 'dialer' ? 'sel' : ''}"><small>Dialer time</small><b>${hasDialerClock ? fmtTime(dialerNow) : '—'}</b></div>
+        <div class="clk ${cfg.source === 'system' ? 'sel' : ''}"><small>This PC</small><b>${fmtTime(pcNow)}</b></div>
+      </div>
+      <div class="hint">${diffText}</div>
+      <div class="row2">
+        <button class="btn green" data-act="ck-now" data-v="in" ${st === 'in' ? 'disabled' : ''}>${ICON.login} Clock in now</button>
+        <button class="btn gray" data-act="ck-now" data-v="out" ${st === 'out' ? 'disabled' : ''}>${ICON.logout} Clock out now</button>
+      </div>
+      <div class="next">${next}</div>
+      ${today ? `<div class="today">${today}</div>` : ''}`;
+  }
+
+  function renderClockForm(force) {
+    if (!els || !els.ckForm) return;
+    if (!force && els.ckForm.contains(shadow.activeElement)) return;
+    daGetClock().then(({ cfg }) => {
+      const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+      const names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const sups = supervisors.list || [];
+      const supOpts = [`<option value="">Keep dialer's current${supervisors.current ? ` (${esc(supervisors.current)})` : ''}</option>`]
+        .concat(sups.map(n => `<option ${n === cfg.supervisor ? 'selected' : ''}>${esc(n)}</option>`));
+      if (cfg.supervisor && !sups.includes(cfg.supervisor)) supOpts.push(`<option selected>${esc(cfg.supervisor)}</option>`);
+      els.ckForm.innerHTML = `
+        <label class="switch"><span>Automatic clock in / out</span><input type="checkbox" id="ckOn" ${cfg.enabled ? 'checked' : ''}><span class="t"></span></label>
+        <div class="row2">
+          <div><div class="flab">Clock in at</div><label class="inp">${ICON.login}<input type="time" id="ckIn" value="${esc(cfg.inTime)}"></label></div>
+          <div><div class="flab">Clock out at</div><label class="inp">${ICON.logout}<input type="time" id="ckOut" value="${esc(cfg.outTime)}"></label></div>
+        </div>
+        <div><div class="flab">Days</div><div class="days">${days.map((d, i) =>
+          `<button class="day ${cfg.days.includes(i) ? 'on' : ''}" data-act="ck-day" data-v="${i}" title="${names[i]}">${d}</button>`).join('')}</div></div>
+        <div>
+          <div class="flab" style="display:flex;justify-content:space-between">Supervisor in charge
+            <a class="lnk" data-act="ck-readsup">${ICON.refresh} ${sups.length ? 'Refresh list' : 'Load list from dialer'}</a></div>
+          <div class="field"><label class="inp">${ICON.user}<select id="ckSup">${supOpts.join('')}</select></label>
+            <button class="btn ghost sm" data-act="ck-sup" title="Change the supervisor in the dialer now">Set now</button></div>
+        </div>
+        <div><div class="flab">Use time from</div><div class="seg">
+          <button data-act="ck-src" data-v="dialer" class="${cfg.source === 'dialer' ? 'on' : ''}">Dialer time</button>
+          <button data-act="ck-src" data-v="system" class="${cfg.source === 'system' ? 'on' : ''}">Computer time</button></div></div>
+        <div class="row2">
+          <div><div class="flab">Warn before</div><label class="inp"><select id="ckWarn">${[0, 1, 2, 5].map(m =>
+            `<option value="${m}" ${cfg.warnMin === m ? 'selected' : ''}>${m ? m + ' min' : 'No warning'}</option>`).join('')}</select></label></div>
+          <div><div class="flab">Late by up to</div><label class="inp"><select id="ckGrace">${[5, 15, 30, 60].map(m =>
+            `<option value="${m}" ${cfg.graceMin === m ? 'selected' : ''}>${m} min</option>`).join('')}</select></label></div>
+        </div>
+        <div class="hint">Keep a dialer tab open (Edge opens one by itself a few minutes before). Times already past today are skipped when you change the schedule.</div>`;
+    });
+  }
+
+  async function saveClockForm(silent, patch) {
+    const $ = id => shadow.getElementById(id);
+    const { cfg: old } = await daGetClock();
+    const cfg = Object.assign({}, old, {
+      enabled: $('ckOn').checked,
+      inTime: $('ckIn').value || old.inTime,
+      outTime: $('ckOut').value || old.outTime,
+      supervisor: $('ckSup').value,
+      warnMin: Number($('ckWarn').value),
+      graceMin: Number($('ckGrace').value)
+    }, patch || {});
+    await chrome.storage.local.set({ clock: cfg });
+    // Don't fire for times that already passed today when the schedule changes.
+    const state = await daGetClock();
+    for (const e of daClockPlan(state).today) {
+      if (['due', 'missed'].includes(e.status) && (JSON.stringify(old) !== JSON.stringify(cfg))) await SDC.skip(e.key, e.kind, true);
+    }
+    if (!silent) toast(cfg.enabled ? 'Schedule saved' : 'Automatic clock in/out off');
+    liveTick();
+  }
+
+  async function clockAction(act, v, btn) {
+    if (!SDC) return;
+    const sup = shadow.getElementById('ckSup');
+    try {
+      if (act === 'ck-day') {
+        const { cfg } = await daGetClock();
+        const d = Number(v);
+        const days = cfg.days.includes(d) ? cfg.days.filter(x => x !== d) : cfg.days.concat(d).sort();
+        await saveClockForm(false, { days });
+        renderClockForm(true);
+      } else if (act === 'ck-src') {
+        await saveClockForm(false, { source: v });
+        renderClockForm(true);
+      } else if (act === 'ck-skip' || act === 'ck-unskip') {
+        const plan = daClockPlan(await daGetClock());
+        await SDC.skip(plan.key, v, act === 'ck-skip');
+        await daLog('clock', `${act === 'ck-skip' ? 'Skipped' : 'Un-skipped'} today's ${KIND[v].toLowerCase()}.`);
+        liveTick();
+      } else if (act === 'ck-readsup') {
+        toast('Reading supervisors…');
+        await SDC.readSupervisors();
+        toast('Supervisor list updated');
+      } else if (act === 'ck-sup' || act === 'ck-now') {
+        if (btn) btn.disabled = true;
+        const kind = act === 'ck-sup' ? 'supervisor' : v;
+        if (kind === 'supervisor' && !sup.value) { toast('Pick a supervisor first'); return; }
+        if (kind !== 'supervisor') {
+          // a manual clock in/out stands in for today's scheduled one if it hasn't run yet
+          const plan = daClockPlan(await daGetClock());
+          const ev = plan.today.find(e => e.kind === kind && ['upcoming', 'warn', 'due'].includes(e.status));
+          if (ev) await SDC.skip(ev.key, kind, true);
+        }
+        const msg = await SDC.perform(kind, sup ? sup.value : '');
+        clockMsg = { text: msg, at: Date.now() };
+        toast(msg);
+      }
+    } catch (e) {
+      clockMsg = { text: e.message, err: true, at: Date.now() };
+      toast(e.message);
+    } finally {
+      if (btn) btn.disabled = false;
+      liveTick();
+    }
+  }
+
+  // ---------- Activity tab ----------
+  function renderLog() {
+    if (!els || !els.log) return;
+    const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+    const today = activity.filter(a => a.t >= startOfDay.getTime());
+    const count = k => today.filter(a => a.kind === k).length;
+    const runs = today.filter(a => a.kind === 'run' && !a.error).length;
+    els.stats.innerHTML = `
+      <div class="stat"><b>${count('lookup')}</b><small>Lookups</small></div>
+      <div class="stat"><b>${runs}</b><small>Runs done</small></div>
+      <div class="stat"><b>${count('call')}</b><small>Zoiper calls</small></div>`;
+    const icon = { lookup: ICON.search, run: ICON.play, call: ICON.phone, clock: ICON.clock, search: ICON.search };
+    els.log.innerHTML = activity.slice(0, 80).map(a => `
+      <div class="li ${a.error ? 'err' : a.ok ? 'ok' : ''}"><span class="ic">${icon[a.kind] || ICON.list}</span>
+        <span class="tx">${esc(a.text)}</span><time>${new Date(a.t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</time></div>`).join('')
+      || '<div class="hint">Nothing yet.</div>';
   }
 
   // ---------- Zoiper hand-off ----------
@@ -814,9 +1156,11 @@
   async function incomingCall(phone) {
     if (!phone) return;
     if (loadUi().collapsed) setCollapsed(false);
+    { const ui = loadUi(); ui.tab = 'lookup'; saveUi(ui); }
     els.phone.value = phone;
     await doLookup();
     toast('Incoming call: ' + fmtPhone(phone));
+    daLog('call', `Zoiper call from ${fmtPhone(phone)}`);
     const ui = loadUi();
     const job = loadJob();
     if (settings.autoRunOnCall && ui.results && ui.results.length === 1 && !(job && job.running)) {
@@ -838,6 +1182,7 @@
     if (msg.type === 'togglePanel') setCollapsed(!loadUi().collapsed);
     if (msg.type === 'focusPhone') {
       if (loadUi().collapsed) setCollapsed(false);
+      const ui = loadUi(); ui.tab = 'lookup'; saveUi(ui);
       els.phone.focus();
       els.phone.select();
     }
@@ -845,8 +1190,19 @@
 
   daGetSettings().then(s => {
     settings = s;
+    chrome.storage.local.set({ lastOrigin: location.origin });
     buildPanel();
     runner();
+    if (window.SDClock) {
+      window.SDClock.start({
+        isJobRunning: () => { const j = loadJob(); return !!(j && j.running); },
+        onEvent: ev => {
+          if (ev.phase === 'start') clockMsg = { text: `${ev.kind === 'in' ? 'Clocking in' : 'Clocking out'}…`, at: Date.now() };
+          else clockMsg = { text: ev.msg, err: ev.phase === 'error', at: Date.now() };
+          liveTick();
+        }
+      });
+    }
     checkCallHash();
     window.addEventListener('hashchange', checkCallHash);
   });

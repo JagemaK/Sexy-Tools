@@ -4,65 +4,106 @@
   <meta charset="utf-8">
   <title>Sean's Dialer Settings</title>
   <style>
-    body { font-family: Segoe UI, Arial, sans-serif; font-size: 14px; color: #1f2937; background: #f8fafc;
-           max-width: 640px; margin: 24px auto; padding: 0 16px; }
-    h1 { font-size: 20px; }
-    section { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
-    h2 { font-size: 15px; margin: 0 0 10px; }
-    label { display: block; margin: 10px 0 4px; font-weight: 600; }
-    input[type=text], input[type=number], textarea { width: 100%; padding: 7px 9px; border: 1px solid #cbd5e1;
-           border-radius: 5px; font: inherit; box-sizing: border-box; }
-    textarea { height: 70px; }
-    button { padding: 7px 14px; border: 0; border-radius: 5px; background: #2563eb; color: #fff; cursor: pointer; font: inherit; margin-top: 10px; }
-    .muted { color: #64748b; font-size: 13px; }
-    #importStatus, #saved, #testOut { margin-top: 8px; }
+    :root { --blue: #2563eb; --blue-d: #1d4ed8; --ink: #0f172a; --mut: #64748b; --line: #e2e8f0; }
+    * { box-sizing: border-box; }
+    body { font-family: "Segoe UI", system-ui, Arial, sans-serif; font-size: 14px; color: var(--ink); margin: 0;
+           background: #f1f5f9; }
+    header { color: #fff; padding: 28px 16px 64px;
+             background: radial-gradient(120% 160% at 0% 0%, #3b82f6 0%, #1e3a8a 55%, #0f172a 100%); }
+    .wrap { max-width: 720px; margin: 0 auto; }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .logo { width: 46px; height: 46px; border-radius: 13px; display: grid; place-items: center; font-weight: 800; font-size: 17px;
+            background: linear-gradient(135deg, #fff, #c7d2fe); color: #1e3a8a; }
+    h1 { font-size: 22px; margin: 0; }
+    header p { margin: 4px 0 0; color: #c7d2fe; font-size: 13px; }
+    main { max-width: 720px; margin: -44px auto 40px; padding: 0 16px; }
+    section { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin-bottom: 16px;
+              box-shadow: 0 6px 18px rgba(15,23,42,.06); }
+    h2 { font-size: 15px; margin: 0 0 4px; display: flex; align-items: center; gap: 9px; }
+    h2 .ic { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: #eef2ff; color: var(--blue-d); font-size: 15px; }
+    .muted { color: var(--mut); font-size: 13px; line-height: 1.5; }
+    label { display: block; margin: 14px 0 5px; font-weight: 600; font-size: 13px; }
+    input[type=text], input[type=number], textarea { width: 100%; padding: 9px 11px; border: 1px solid #cbd5e1;
+           border-radius: 9px; font: inherit; background: #fff; }
+    input:focus, textarea:focus { outline: 0; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
+    textarea { height: 76px; resize: vertical; }
+    .row { display: flex; gap: 8px; align-items: center; }
+    .row input { flex: 1; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+    @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+    button { padding: 9px 16px; border: 0; border-radius: 9px; background: var(--blue); color: #fff; cursor: pointer; font: inherit; font-weight: 600; }
+    button:hover { background: var(--blue-d); }
+    .drop { margin-top: 12px; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 20px; text-align: center; color: var(--mut);
+            cursor: pointer; transition: .15s; background: #f8fafc; }
+    .drop:hover, .drop.over { border-color: var(--blue); background: #eff6ff; color: var(--blue-d); }
+    .drop b { color: var(--ink); }
+    .drop input { display: none; }
+    .status { margin-top: 10px; padding: 9px 12px; border-radius: 9px; background: #f8fafc; border: 1px solid var(--line); font-size: 13px; color: #334155; }
+    .status:empty { display: none; }
+    .check { display: flex; gap: 10px; align-items: flex-start; font-weight: 500; margin-top: 16px; cursor: pointer; }
+    .check input { margin-top: 3px; width: 16px; height: 16px; }
+    code { background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+    .ok { color: #166534; font-weight: 600; margin-left: 10px; }
+    .tip { display: flex; gap: 10px; padding: 11px 13px; border-radius: 10px; background: #eff6ff; color: #1e3a8a; font-size: 13px; margin-top: 10px; }
   </style>
 </head>
 <body>
-  <h1>Sean's Dialer</h1>
+  <header>
+    <div class="wrap brand">
+      <div class="logo">SD</div>
+      <div><h1>Sean's Dialer</h1><p>Caller lookup · automated dispositions · Zoiper hand-off · scheduled time clock</p></div>
+    </div>
+  </header>
+  <main>
+    <section>
+      <h2><span class="ic">📇</span>Cellphone → control number data</h2>
+      <p class="muted">Import the NEOS cellphones workbook (.xlsx) or a CSV with columns <code>ctrl</code>, <code>CC Cell</code>,
+        <code>REG CELL</code>. The data stays in this browser only; re-importing replaces it.</p>
+      <label class="drop" id="drop"><input type="file" id="file" accept=".xlsx,.xls,.csv">
+        <b>Choose the workbook</b> or drop it here</label>
+      <div id="importStatus" class="status"></div>
+      <label for="testPhone">Test a lookup</label>
+      <div class="row"><input type="text" id="testPhone" placeholder="Phone number"><button id="test">Look up</button></div>
+      <div id="testOut" class="status"></div>
+    </section>
 
-  <section>
-    <h2>Cellphone → control number data</h2>
-    <p class="muted">Import the NEOS cellphones workbook (.xlsx) or a CSV with columns
-      <code>ctrl</code>, <code>CC Cell</code>, <code>REG CELL</code>. The data stays in this browser only.
-      Re-importing replaces the previous data.</p>
-    <input type="file" id="file" accept=".xlsx,.xls,.csv">
-    <div id="importStatus" class="muted"></div>
-    <label for="testPhone">Test lookup</label>
-    <input type="text" id="testPhone" placeholder="Phone number">
-    <button id="test">Look up</button>
-    <div id="testOut" class="muted"></div>
-  </section>
+    <section>
+      <h2><span class="ic">⏰</span>Time clock</h2>
+      <p class="muted">Set the automatic clock in / clock out times, days, supervisor in charge and whether to use the
+        <b>dialer's time</b> or <b>this computer's time</b> in the panel's <b>Time Clock</b> tab on the dialer page.
+        It also shows both clocks, a countdown before each event, and Clock in / Clock out now buttons.</p>
+      <div class="tip">💡 Keep Edge running. If no dialer tab is open, the extension opens one a few minutes before a scheduled clock in/out.
+        A desktop notification confirms each one.</div>
+    </section>
 
-  <section>
-    <h2>Zoiper: look up the caller automatically</h2>
-    <p class="muted">In Zoiper: <b>Settings → Automation → Add rule</b> (or, with <i>Show advanced options</i> on,
-      <b>General → Call events → Open URL on: incoming call answer</b>). Set the action to <b>Open URL</b> and paste this,
-      replacing <code>CALLER</code> with Zoiper's caller-number variable (for example <code>$(CALLERNUMBER)</code>):</p>
-    <input type="text" id="zoiperUrl" readonly>
-    <p class="muted">Zoiper opens that address in your default browser (make Edge the default). The extension sends the number
-      to your open dialer tab, closes the extra tab and shows the control number.</p>
-    <label for="simPhone">Simulate a call</label>
-    <input type="text" id="simPhone" placeholder="Phone number">
-    <button id="sim">Simulate</button>
-  </section>
+    <section>
+      <h2><span class="ic">📞</span>Zoiper: look up the caller automatically</h2>
+      <p class="muted">In Zoiper: <b>Settings → Automation → Add rule</b> (or, with <i>Show advanced options</i> on,
+        <b>General → Call events → Open URL on: incoming call answer</b>). Set the action to <b>Open URL</b> and paste this,
+        replacing <code>CALLER</code> with Zoiper's caller-number variable (for example <code>$(CALLERNUMBER)</code>):</p>
+      <input type="text" id="zoiperUrl" readonly>
+      <p class="muted">Zoiper opens that address in your default browser (make Edge the default). The extension sends the number
+        to your open dialer tab, closes the extra tab and shows the control number.</p>
+      <label for="simPhone">Simulate a call</label>
+      <div class="row"><input type="text" id="simPhone" placeholder="Phone number"><button id="sim">Simulate</button></div>
+    </section>
 
-  <section>
-    <h2>Automation</h2>
-    <label for="dispositions">Dispositions to save, in order (one per line)</label>
-    <textarea id="dispositions"></textarea>
-    <p class="muted">Each line = one pass (search → select → finish → disposition → save).
-      A final pass then stops on the disposition page for the agent. Text must match the disposition name on the page.</p>
-    <label for="searchPath">Search page path</label>
-    <input type="text" id="searchPath">
-    <label for="timeoutMs">Wait timeout per step (ms)</label>
-    <input type="number" id="timeoutMs">
-    <label for="afterSaveMs">Pause after Save (ms)</label>
-    <input type="number" id="afterSaveMs">
-    <label><input type="checkbox" id="autoRunOnCall"> Start the run by itself when a Zoiper call matches exactly one control number</label>
-    <button id="save">Save settings</button>
-    <div id="saved" class="muted"></div>
-  </section>
+    <section>
+      <h2><span class="ic">⚙️</span>Automation</h2>
+      <label for="dispositions">Dispositions to save, in order (one per line)</label>
+      <textarea id="dispositions"></textarea>
+      <p class="muted">Each line = one pass (search → select → finish → disposition → save). A final pass then stops on the
+        disposition page for the agent. Text must match the disposition name on the page.</p>
+      <div class="grid">
+        <div><label for="searchPath">Search page path</label><input type="text" id="searchPath"></div>
+        <div><label for="timeoutMs">Wait timeout per step (ms)</label><input type="number" id="timeoutMs"></div>
+        <div><label for="afterSaveMs">Pause after Save (ms)</label><input type="number" id="afterSaveMs"></div>
+      </div>
+      <label class="check"><input type="checkbox" id="autoRunOnCall">
+        <span>Start the run by itself when a Zoiper call matches exactly one control number</span></label>
+      <div style="margin-top:16px"><button id="save">Save settings</button><span id="saved" class="ok"></span></div>
+    </section>
+  </main>
 
   <script src="lib/xlsx.full.min.js"></script>
   <script src="common.js"></script>

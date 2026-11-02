@@ -1,25 +1,42 @@
 {
   "manifest_version": 3,
   "name": "Sean's Dialer",
-  "version": "1.2.1",
-  "description": "Phone -> control number lookup and automated dispositions for the Alliance dialer.",
-  "permissions": ["storage", "unlimitedStorage", "clipboardWrite"],
+  "version": "1.3.0",
+  "description": "Caller lookup, automated dispositions and scheduled time clock for the Alliance dialer.",
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "clipboardWrite",
+    "alarms",
+    "notifications"
+  ],
   "host_permissions": [
     "http://69.10.47.54/*",
     "https://69.10.47.54/*",
     "http://proxy2.alliancedialer.com/*",
     "https://proxy2.alliancedialer.com/*"
   ],
-  "background": { "service_worker": "background.js" },
-  "action": { "default_title": "Sean's Dialer (toggle panel)" },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Sean's Dialer (toggle panel)"
+  },
   "options_page": "options.html",
   "commands": {
     "focus-phone": {
-      "suggested_key": { "default": "Alt+Shift+F" },
+      "suggested_key": {
+        "default": "Alt+Shift+F"
+      },
       "description": "Focus the caller phone box"
     }
   },
-  "icons": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "content_scripts": [
     {
       "matches": [
@@ -28,7 +45,9 @@
         "http://proxy2.alliancedialer.com/*",
         "https://proxy2.alliancedialer.com/*"
       ],
-      "js": ["page-hooks.js"],
+      "js": [
+        "page-hooks.js"
+      ],
       "world": "MAIN",
       "run_at": "document_start",
       "all_frames": true
@@ -40,7 +59,11 @@
         "http://proxy2.alliancedialer.com/*",
         "https://proxy2.alliancedialer.com/*"
       ],
-      "js": ["common.js", "content.js"],
+      "js": [
+        "common.js",
+        "clock.js",
+        "content.js"
+      ],
       "run_at": "document_idle"
     }
   ]

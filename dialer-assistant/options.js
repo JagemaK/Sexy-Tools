@@ -28,7 +28,7 @@ $('save').onclick = async () => {
     autoRunOnCall: $('autoRunOnCall').checked
   };
   await chrome.storage.local.set({ settings });
-  $('saved').textContent = 'Saved.';
+  $('saved').textContent = '✓ Saved';
   setTimeout(() => ($('saved').textContent = ''), 1500);
 };
 
@@ -118,6 +118,17 @@ $('file').onchange = async e => {
     status.textContent = `Import failed: ${err.message}`;
   }
   e.target.value = '';
+};
+
+const drop = $('drop');
+drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
+drop.ondragleave = () => drop.classList.remove('over');
+drop.ondrop = e => {
+  e.preventDefault();
+  drop.classList.remove('over');
+  if (!e.dataTransfer.files.length) return;
+  $('file').files = e.dataTransfer.files;
+  $('file').dispatchEvent(new Event('change'));
 };
 
 const ZOIPER_BASE = 'http://proxy2.alliancedialer.com/members/search#da-phone=';
