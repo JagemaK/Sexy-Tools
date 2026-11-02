@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Dialer Assistant",
-  "version": "1.2.0",
+  "name": "Sean's Dialer",
+  "version": "1.2.1",
   "description": "Phone -> control number lookup and automated dispositions for the Alliance dialer.",
   "permissions": ["storage", "unlimitedStorage", "clipboardWrite"],
   "host_permissions": [
@@ -11,7 +11,7 @@
     "https://proxy2.alliancedialer.com/*"
   ],
   "background": { "service_worker": "background.js" },
-  "action": { "default_title": "Dialer Assistant (toggle panel)" },
+  "action": { "default_title": "Sean's Dialer (toggle panel)" },
   "options_page": "options.html",
   "commands": {
     "focus-phone": {

@@ -1,4 +1,4 @@
-# Dialer Assistant (Edge extension)
+# Sean's Dialer (Edge extension)
 
 Phone number → control number lookup, plus the automated "called in" disposition
 passes on `proxy2.alliancedialer.com` / `69.10.47.54`.
@@ -10,7 +10,7 @@ passes on `proxy2.alliancedialer.com` / `69.10.47.54`.
    and import `NEOS_Cellphones.xlsx`. It is a one-time import (about 30–60 s), and the data stays in the browser.
 
 ## Use
-A **Dialer Assistant** panel floats over the dialer pages.
+A **Sean's Dialer** panel floats over the dialer pages.
 
 - **Move it** by dragging the blue header. **Resize it** from any edge or corner. Double-click an edge to go back to automatic height.
   The position and size are remembered across tabs and reloads.

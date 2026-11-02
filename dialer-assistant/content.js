@@ -1,4 +1,4 @@
-// Dialer Assistant content script: floating panel + automation runner.
+// Sean's Dialer content script: floating panel + automation runner.
 //
 // The run state lives in sessionStorage (per tab, survives page loads), so the
 // runner resumes at the right phase whether the site navigates or swaps DOM.
@@ -516,7 +516,7 @@
     shadow.innerHTML = `<style>${CSS}</style>
       <div class="panel">
         <div class="head" id="head">
-          <div class="title"><span class="dot" id="dot"></span><span>Dialer Assistant</span></div>
+          <div class="title"><span class="dot" id="dot"></span><span>Sean's Dialer</span></div>
           <button class="hbtn" id="opts" title="Settings / import data">${ICON.gear}</button>
           <button class="hbtn" id="tog" title="Minimize">${ICON.min}</button>
         </div>
