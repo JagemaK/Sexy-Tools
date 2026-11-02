@@ -32,14 +32,9 @@ A **Sean's Dialer** panel floats over the dialer pages.
 - Shows whether you're **clocked in or out**, the dialer's shift timer, and the **dialer's time next to this PC's time**
   (the dialer clock is read from the top bar).
 - **Clock in now / Clock out now** buttons, and **Set now** to change the supervisor right away.
-- **Schedule**: turn on *Automatic clock in / out*, pick the clock-in and clock-out times, the days, the
-  **supervisor in charge** (the list is read from the dialer's Time Clock dialog; use *Refresh list* if it's empty),
-  and whether the times are **dialer time** or **computer time**.
-- A countdown banner appears before each event (*Warn before*), with **Skip today**. If Edge was busy or the tab
-  was closed, it still acts if it's no more than *Late by up to* minutes late; after that it's logged as missed.
-- Keep Edge running. If no dialer tab is open, one is opened a few minutes before the event. A desktop notification
-  confirms each scheduled clock in/out (or says why it failed).
-- A manual clock in/out stands in for that day's scheduled one.
+- **Scheduled break, bio & lunch**: add entries with a time and minutes. They run every day and are skipped if you're clocked out.
+  Choose the **supervisor in charge** (used when clocking back in) and whether times are **dialer time** or **computer time**.
+  A countdown banner appears before each one (*Warn before*) with **Skip today**.
 
 ## Break, Bio & Lunch
 In the Time Clock tab pick **Break**, **Bio** or **Lunch**, set the minutes (or tap 5m/10m/15m/30m/45m/60m), and press start:
@@ -49,8 +44,8 @@ In the Time Clock tab pick **Break**, **Bio** or **Lunch**, set the minutes (or 
 - While away: a timer in the header and the tab, **Clock in now / End break**, **+5 min**, and a countdown banner in the last minute(s).
 - `0` minutes = until you end it.
 - **Scheduled**: in Schedule → *Breaks, bio & lunch* → **+ Break / + Bio / + Lunch**, set the time and the minutes. They
-  follow the same days and dialer/computer time as the clock in/out, and are skipped if you're clocked out.
-- Clocking in/out yourself, or the end-of-day clock out, cancels a pending bio/lunch auto clock-in. Clocking out ends a tea-cup break first.
+  run every day, use the dialer/computer time setting, and are skipped if you're clocked out.
+- Clocking in/out yourself cancels a pending bio/lunch auto clock-in. Clocking out ends a tea-cup break first.
 
 ## Screen off / locked
 It keeps working with the screen off or the PC locked, as long as Edge is running and the PC isn't shut down or asleep:
@@ -58,7 +53,7 @@ It keeps working with the screen off or the PC locked, as long as Edge is runnin
   bio/lunch/break timer is on. The screen can still turn off.
 - Dialer tabs are excluded from Edge's "sleeping tabs", and a tab that was put to sleep is reloaded before an event.
 - Background alarms wake the dialer tab at the exact time, since Edge slows down timers in hidden tabs.
-- If no dialer tab is open, one is opened a few minutes before the event.
+- If the dialer tab was closed while you're on bio/lunch/break, one is opened shortly before you're due back.
 - You still have to be logged in to the dialer. If the session times out, the clicks can't happen. That's logged and you get a notification.
 
 ## Activity tab

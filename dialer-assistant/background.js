@@ -73,8 +73,10 @@ async function pokeTabs(reason) {
 async function clockHeartbeat(reason) {
   const state = await daGetClock();
   const away = state.breakState && state.breakState.on && state.breakState.plannedEnd;
-  setAwake(!!((state.cfg.enabled || away) && state.cfg.keepAwake !== false));
-  if (!state.cfg.enabled && !away) return;
+  const scheduled = (state.cfg.breaks || []).length > 0;
+  const tabsOpen = (await chrome.tabs.query({ url: DIALER_URLS })).length > 0;
+  setAwake(!!(((scheduled && tabsOpen) || away) && state.cfg.keepAwake !== false));
+  if (!scheduled && !away) return;
 
   const plan = daClockPlan(state);
   const upcoming = plan.today.filter(e => ['upcoming', 'warn', 'due'].includes(e.status)).map(e => e.at);
@@ -84,11 +86,13 @@ async function clockHeartbeat(reason) {
   if (nextAt !== Infinity) chrome.alarms.create('clock-exact', { when: Math.max(nextAt, Date.now() + 1000) + 500 });
 
   const tabs = await pokeTabs(reason);
-  if (!tabs.length && nextAt - Date.now() < 3 * 60000) {
+  // Only re-open the dialer to bring you back from bio/lunch/break; a scheduled
+  // start with no dialer open means you're not working, so it's skipped.
+  if (!tabs.length && away && state.breakState.plannedEnd - Date.now() < 3 * 60000) {
     const { lastOrigin, settings } = await chrome.storage.local.get(['lastOrigin', 'settings']);
     const path = (settings && settings.searchPath) || DA_DEFAULTS.searchPath;
     chrome.tabs.create({ url: (lastOrigin || 'http://proxy2.alliancedialer.com') + path, active: false });
-    daLog('clock', 'Opened a dialer tab for an upcoming scheduled action.');
+    daLog('clock', 'Opened a dialer tab to bring you back on time.');
   }
 }
 

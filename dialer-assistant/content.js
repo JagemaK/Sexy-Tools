@@ -660,7 +660,7 @@
           <section class="pane" data-pane="clock">
             <div class="box"><div class="box-b" id="ckLive"></div></div>
             <div class="box">
-              <div class="box-h"><span style="display:flex;align-items:center;gap:7px">${ICON.clock} Schedule</span></div>
+              <div class="box-h"><span style="display:flex;align-items:center;gap:7px">${ICON.clock} Scheduled break, bio &amp; lunch</span></div>
               <div class="box-b" id="ckForm"></div>
             </div>
           </section>
@@ -1029,7 +1029,7 @@
       els.bannerWrap.innerHTML = banner;
       els.bannerWrap.dataset.h = banner;
     }
-    els.clockBadge.textContent = cfg.enabled && plan.next ? daFmtHm(`${wallOf(plan.next.at).getHours()}:${wallOf(plan.next.at).getMinutes()}`) : '';
+    els.clockBadge.textContent = plan.next ? daFmtHm(`${wallOf(plan.next.at).getHours()}:${wallOf(plan.next.at).getMinutes()}`) : '';
 
     if ((loadUi().tab || 'lookup') !== 'clock') return;
     // don't redraw under an open dropdown
@@ -1042,18 +1042,18 @@
     const stHtml = st === 'in' ? '<span class="big in"><i></i>Clocked in</span>'
       : st === 'out' ? '<span class="big out"><i></i>Clocked out</span>'
       : '<span class="big unk"><i></i>Status unknown</span>';
-    let next = '<span class="hint">Automatic clock in/out is off.</span>';
-    if (cfg.enabled && plan.next) {
+    let next = '<span class="hint">Nothing scheduled. Start one above, or add one below.</span>';
+    if (plan.next) {
       const w = wallOf(plan.next.at);
       const isToday = plan.next.key === plan.key;
       next = `${ICON.clock}<span>Next: <b>${daKindLabel(plan.next.kind, cfg)}</b> ${isToday ? 'today' : w.toLocaleDateString([], { weekday: 'short' })} at <b>${fmtTime(w, false)}</b> · in ${fmtIn(plan.next.at - Date.now())}</span>`;
     }
-    const today = cfg.enabled ? plan.today.filter(e => e.status !== 'off').map(e => {
+    const today = plan.today.length ? plan.today.filter(e => e.status !== 'off').map(e => {
       const r = e.result && e.result.at ? ` · ${fmtTime(new Date(e.result.at), false)}` : '';
       const skip = e.status === 'skipped'
         ? `<a class="lnk" data-act="ck-unskip" data-v="${e.kind}">undo</a>`
         : ['upcoming', 'warn'].includes(e.status) ? `<a class="lnk" data-act="ck-skip" data-v="${e.kind}">skip today</a>` : '';
-      const at = e.kind === 'in' ? cfg.inTime : e.kind === 'out' ? cfg.outTime : cfg.breaks[Number(e.kind.slice(1))].start;
+      const at = cfg.breaks[parseInt(e.kind.slice(1), 10)].start;
       return `<div><span class="tag ${e.status}">${e.status}</span>${daKindLabel(e.kind, cfg)} ${daFmtHm(at)}${e.minutes ? ` · ${e.minutes} min` : ''}${r} ${skip}</div>`;
     }).join('') : '';
     const ui = loadUi();
@@ -1104,26 +1104,11 @@
     if (!els || !els.ckForm) return;
     if (!force && els.ckForm.contains(shadow.activeElement)) return;
     daGetClock().then(({ cfg }) => {
-      const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-      const names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       const sups = supervisors.list || [];
       const supOpts = [`<option value="">Keep dialer's current${supervisors.current ? ` (${esc(supervisors.current)})` : ''}</option>`]
         .concat(sups.map(n => `<option ${n === cfg.supervisor ? 'selected' : ''}>${esc(n)}</option>`));
       if (cfg.supervisor && !sups.includes(cfg.supervisor)) supOpts.push(`<option selected>${esc(cfg.supervisor)}</option>`);
       els.ckForm.innerHTML = `
-        <label class="switch"><span>Automatic clock in / out</span><input type="checkbox" id="ckOn" ${cfg.enabled ? 'checked' : ''}><span class="t"></span></label>
-        <div class="row2">
-          <div><div class="flab">Clock in at</div><label class="inp">${ICON.login}<input type="time" id="ckIn" value="${esc(cfg.inTime)}"></label></div>
-          <div><div class="flab">Clock out at</div><label class="inp">${ICON.logout}<input type="time" id="ckOut" value="${esc(cfg.outTime)}"></label></div>
-        </div>
-        <div><div class="flab">Days</div><div class="days">${days.map((d, i) =>
-          `<button class="day ${cfg.days.includes(i) ? 'on' : ''}" data-act="ck-day" data-v="${i}" title="${names[i]}">${d}</button>`).join('')}</div></div>
-        <div>
-          <div class="flab" style="display:flex;justify-content:space-between">Supervisor in charge
-            <a class="lnk" data-act="ck-readsup">${ICON.refresh} ${sups.length ? 'Refresh list' : 'Load list from dialer'}</a></div>
-          <div class="field"><label class="inp">${ICON.user}<select id="ckSup">${supOpts.join('')}</select></label>
-            <button class="btn ghost sm" data-act="ck-sup" title="Change the supervisor in the dialer now">Set now</button></div>
-        </div>
         <div><div class="flab" style="display:flex;justify-content:space-between">Breaks, bio &amp; lunch
             <span><a class="lnk" data-act="ck-addbrk" data-v="break">+ Break</a> · <a class="lnk" data-act="ck-addbrk" data-v="bio">+ Bio</a> · <a class="lnk" data-act="ck-addbrk" data-v="lunch">+ Lunch</a></span></div>
           ${(cfg.breaks || []).map((b, i) => `<div class="brow">
@@ -1135,6 +1120,12 @@
             || '<div class="hint">Nothing scheduled.</div>'}
           <div class="hint" style="margin-top:6px">Break = tea cup on/off. Bio &amp; lunch = clock out at the time, then clock back in after the minutes.</div>
         </div>
+        <div>
+          <div class="flab" style="display:flex;justify-content:space-between">Supervisor in charge
+            <a class="lnk" data-act="ck-readsup">${ICON.refresh} ${sups.length ? 'Refresh list' : 'Load list from dialer'}</a></div>
+          <div class="field"><label class="inp">${ICON.user}<select id="ckSup">${supOpts.join('')}</select></label>
+            <button class="btn ghost sm" data-act="ck-sup" title="Change the supervisor in the dialer now">Set now</button></div>
+        </div>
         <div><div class="flab">Use time from</div><div class="seg">
           <button data-act="ck-src" data-v="dialer" class="${cfg.source === 'dialer' ? 'on' : ''}">Dialer time</button>
           <button data-act="ck-src" data-v="system" class="${cfg.source === 'system' ? 'on' : ''}">Computer time</button></div></div>
@@ -1145,7 +1136,7 @@
             `<option value="${m}" ${cfg.graceMin === m ? 'selected' : ''}>${m} min</option>`).join('')}</select></label></div>
         </div>
         <label class="switch"><span>Keep this PC awake <span class="hint">(screen can still turn off)</span></span><input type="checkbox" id="ckAwake" ${cfg.keepAwake !== false ? 'checked' : ''}><span class="t"></span></label>
-        <div class="hint">Works with the screen off or locked, as long as Edge is running and the PC isn't shut down. If no dialer tab is open, Edge opens one a few minutes before. Times already past today are skipped when you change the schedule.</div>`;
+        <div class="hint">Scheduled ones run every day at that time and are skipped if you're clocked out. Everything works with the screen off or locked, as long as Edge is running with the dialer open and logged in. Times already past today are skipped when you change the list.</div>`;
     });
   }
 
@@ -1153,9 +1144,6 @@
     const $ = id => shadow.getElementById(id);
     const { cfg: old } = await daGetClock();
     const cfg = Object.assign({}, old, {
-      enabled: $('ckOn').checked,
-      inTime: $('ckIn').value || old.inTime,
-      outTime: $('ckOut').value || old.outTime,
       supervisor: $('ckSup').value,
       warnMin: Number($('ckWarn').value),
       graceMin: Number($('ckGrace').value),
@@ -1171,7 +1159,7 @@
     for (const e of daClockPlan(state).today) {
       if (['due', 'missed'].includes(e.status) && (JSON.stringify(old) !== JSON.stringify(cfg))) await SDC.skip(e.key, e.kind, true);
     }
-    if (!silent) toast(cfg.enabled ? 'Schedule saved' : 'Automatic clock in/out off');
+    if (!silent) toast('Saved');
     liveTick();
   }
 
@@ -1179,13 +1167,7 @@
     if (!SDC) return;
     const sup = shadow.getElementById('ckSup');
     try {
-      if (act === 'ck-day') {
-        const { cfg } = await daGetClock();
-        const d = Number(v);
-        const days = cfg.days.includes(d) ? cfg.days.filter(x => x !== d) : cfg.days.concat(d).sort();
-        await saveClockForm(false, { days });
-        renderClockForm(true);
-      } else if (act === 'ck-addbrk' || act === 'ck-rmbrk') {
+      if (act === 'ck-addbrk' || act === 'ck-rmbrk') {
         const { cfg } = await daGetClock();
         const breaks = (cfg.breaks || []).slice();
         if (act === 'ck-addbrk') breaks.push({ type: v, start: '12:00', minutes: DA_AWAY[v].minutes });

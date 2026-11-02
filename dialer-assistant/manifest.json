@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Sean's Dialer",
-  "version": "1.5.0",
-  "description": "Caller lookup, automated dispositions and scheduled time clock for the Alliance dialer.",
+  "version": "1.6.0",
+  "description": "Caller lookup, automated dispositions, and break/bio/lunch timers for the Alliance dialer.",
   "permissions": [
     "storage",
     "unlimitedStorage",

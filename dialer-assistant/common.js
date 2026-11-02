@@ -106,15 +106,17 @@ const daAwayType = t => (DA_AWAY[t] ? t : 'break');
 function daKindLabel(kind, cfg) {
   if (kind === 'in') return 'Clock in';
   if (kind === 'out') return 'Clock out';
-  const b = cfg && cfg.breaks && cfg.breaks[Number(kind.slice(1))];
+  const b = cfg && cfg.breaks && cfg.breaks[parseInt(kind.slice(1), 10)];
   return DA_AWAY[daAwayType(b && b.type)].label;
 }
 
+// Scheduled break / bio / lunch starts. They run every day; one that comes up
+// while you're clocked out is skipped.
 function daScheduleEvents(cfg) {
-  return [{ kind: 'in', min: daHmToMin(cfg.inTime) }, { kind: 'out', min: daHmToMin(cfg.outTime) }]
-    .concat((cfg.breaks || []).map((b, i) => ({
-      kind: 'b' + i, min: daHmToMin(b.start), type: daAwayType(b.type),
-      minutes: Number(b.minutes) || DA_AWAY[daAwayType(b.type)].minutes })))
+  return (cfg.breaks || []).map((b, i) => ({
+      // index first (for lookups), then type+time so a done/skip mark sticks to that entry
+      kind: `b${i}_${daAwayType(b.type)}_${b.start}`, min: daHmToMin(b.start), type: daAwayType(b.type),
+      minutes: Number(b.minutes) || DA_AWAY[daAwayType(b.type)].minutes }))
     .filter(e => e.min != null);
 }
 
@@ -157,7 +159,7 @@ function daClockPlan({ cfg, offsetMs, done }, now = Date.now()) {
   const wall = daWallNow(cfg.source, offsetMs, now);
   const key = daDateKey(wall);
   const nowMin = wall.getHours() * 60 + wall.getMinutes() + wall.getSeconds() / 60;
-  const todayOn = cfg.enabled && cfg.days.includes(wall.getDay());
+  const todayOn = true;
   const rec = done[key] || {};
   const today = daScheduleEvents(cfg).map(({ kind, min: tMin, minutes, type }) => {
     const at = now + (tMin - nowMin) * 60000; // real ms of the event
@@ -171,10 +173,9 @@ function daClockPlan({ cfg, offsetMs, done }, now = Date.now()) {
     return { kind, at, status, key, minutes, type, result: rec[kind] };
   });
   let next = today.filter(e => ['upcoming', 'warn', 'due'].includes(e.status)).sort((a, b) => a.at - b.at)[0];
-  if (!next && cfg.enabled) {
-    for (let d = 1; d <= 7 && !next; d++) {
+  if (!next) {
+    for (let d = 1; d <= 1 && !next; d++) {
       const w = new Date(wall.getFullYear(), wall.getMonth(), wall.getDate() + d);
-      if (!cfg.days.includes(w.getDay())) continue;
       const kinds = daScheduleEvents(cfg).sort((a, b) => a.min - b.min);
       if (kinds.length) {
         const dayStartReal = now + (w.getTime() - wall.getTime());

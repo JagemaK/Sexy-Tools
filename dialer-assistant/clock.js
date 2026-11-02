@@ -361,8 +361,7 @@ window.SDClock = (() => {
       if (ev.status === 'missed' && !(state.done[ev.key] || {})['missed_' + ev.kind]) {
         if (await claim(ev.key, 'missed_' + ev.kind)) {
           await markDone(ev.key, 'missed_' + ev.kind, Date.now());
-          await daLog('clock', `Missed scheduled ${daKindLabel(ev.kind, state.cfg).toLowerCase()} (no dialer tab open in time).`, { error: true });
-          chrome.runtime.sendMessage({ type: 'notify', title: `Missed ${daKindLabel(ev.kind, state.cfg).toLowerCase()}`, message: 'The dialer tab was not open at the scheduled time.' });
+          await daLog('break', `Scheduled ${daKindLabel(ev.kind, state.cfg).toLowerCase()} at ${daFmtHm(state.cfg.breaks[parseInt(ev.kind.slice(1), 10)].start)} was not started (dialer wasn't open then).`);
         }
       }
       if (ev.status !== 'due' || busy) continue;
@@ -407,7 +406,7 @@ window.SDClock = (() => {
   }
 
   async function scheduledBreak(ev, state) {
-    const label = daFmtHm(state.cfg.breaks[Number(ev.kind.slice(1))].start);
+    const label = daFmtHm(state.cfg.breaks[parseInt(ev.kind.slice(1), 10)].start);
     const name = DA_AWAY[ev.type].label;
     if (status() === 'out') {
       await markDone(ev.key, ev.kind, { at: Date.now(), msg: 'Skipped: clocked out.' });
