@@ -188,12 +188,16 @@ window.SDClock = (() => {
         return `Supervisor changed to ${supervisor}.`;
       }
 
-      if (kind === 'out') {
-        const { breakState: b } = await chrome.storage.local.get('breakState');
-        if (b && b.on) {
+      const { breakState: b } = await chrome.storage.local.get('breakState');
+      if (b && b.on && origin !== 'away') {
+        if (b.method === 'clock') {
+          // clocking in/out by hand (or the end-of-day clock out) cancels the bio/lunch auto clock-in
+          await chrome.storage.local.set({ breakState: { on: false, lastEnd: Date.now(), type: b.type } });
+        } else if (kind === 'out') {
+          // end a tea-cup break before clocking out
           await closeDialog().catch(() => {});
           busy = false;
-          await performBreak(false).catch(() => {});
+          await performAway(false).catch(() => {});
           busy = true;
           await openDialog();
           pickSupervisor(supervisor);
@@ -259,40 +263,62 @@ window.SDClock = (() => {
     await chrome.storage.local.set({ breakState: st });
   }
 
-  // on=true: start a break for `minutes` (0 = until ended). on=false: come back.
-  async function performBreak(on, { minutes = 0, origin = 'manual', label = '', beforeClick } = {}) {
-    if (busy) throw new Error('Another time clock action is running.');
+  // Away = a break (tea cup), bio or lunch (clock out, then back in).
+  // on=true: go away for `minutes` (0 = until ended). on=false: come back.
+  async function performAway(on, { type = 'break', minutes = 0, origin = 'manual', label = '', beforeClick } = {}) {
     const { breakState: cur = { on: false } } = await chrome.storage.local.get('breakState');
-    if (on && cur.on) return 'Already on break.';
-    if (!on && !cur.on) return 'Not on break.';
-    if (on && status() === 'out') throw new Error('You are clocked out, so no break was started.');
-    const cup = cupEl();
-    if (!cup) throw new Error('Could not find the tea cup (break) button in the top bar.');
-    busy = true;
-    const prevFlag = document.documentElement.dataset.daRunning;
-    document.documentElement.dataset.daRunning = '1';
-    try {
-      const now = Date.now();
-      // Record everything first: the dialer may reload the page right after the click.
-      let msg;
-      if (on) {
-        msg = minutes ? `On break for ${minutes} min.` : 'On break.';
-        await setBreakState({ on: true, since: now, plannedEnd: minutes ? now + minutes * 60000 : null, origin, label });
-        await daLog('break', `${origin === 'schedule' ? 'Scheduled break' : 'Break'} started${label ? ' (' + label + ')' : ''}: ${msg}`, { ok: true });
-      } else {
-        const ms = now - (cur.since || now);
-        msg = `Back from break (${Math.round(ms / 60000)} min).`;
-        await setBreakState({ on: false, lastEnd: now });
-        await daLog('break', msg, { ok: true, breakMs: ms });
-      }
-      if (beforeClick) await beforeClick(msg);
-      cup.click();
-      await handleBreakDialog(on);
-      return msg;
-    } finally {
-      document.documentElement.dataset.daRunning = prevFlag || '0';
-      busy = false;
+    const t = daAwayType(on ? type : cur.type);
+    const info = DA_AWAY[t];
+    const name = info.label.toLowerCase();
+    if (on && cur.on) return `Already on ${DA_AWAY[daAwayType(cur.type)].label.toLowerCase()}.`;
+    if (!on && !cur.on) return 'Not on a break.';
+    if (busy) throw new Error('Another time clock action is running.');
+    if (on && status() === 'out') throw new Error(`You are clocked out, so no ${name} was started.`);
+    const cup = info.method === 'cup' ? cupEl() : null;
+    if (info.method === 'cup' && !cup) throw new Error('Could not find the tea cup (break) button in the top bar.');
+
+    // Record everything first: the dialer may reload the page right after the click.
+    const now = Date.now();
+    let msg;
+    if (on) {
+      msg = info.method === 'clock'
+        ? `Clocked out for ${name}${minutes ? `; clocking back in after ${minutes} min` : ''}.`
+        : minutes ? `On ${name} for ${minutes} min.` : `On ${name}.`;
+      await setBreakState({ on: true, type: t, method: info.method, since: now, plannedEnd: minutes ? now + minutes * 60000 : null, origin, label });
+      await daLog('break', `${origin === 'schedule' ? 'Scheduled ' + name : info.label} started${label ? ' (' + label + ')' : ''}: ${msg}`, { ok: true });
+    } else {
+      const ms = now - (cur.since || now);
+      msg = info.method === 'clock'
+        ? `Back from ${name}: clocked in (${Math.round(ms / 60000)} min).`
+        : `Back from ${name} (${Math.round(ms / 60000)} min).`;
+      await setBreakState({ on: false, lastEnd: now, type: t });
+      await daLog('break', msg, { ok: true, breakMs: ms });
     }
+    if (beforeClick) await beforeClick(msg);
+
+    try {
+      if (info.method === 'clock') {
+        const sup = on ? '' : (await daGetClock()).cfg.supervisor;
+        const res = await perform(on ? 'out' : 'in', sup, 'away');
+        if (/^Already/.test(res)) msg += ` (${res})`;
+      } else {
+        busy = true;
+        const prevFlag = document.documentElement.dataset.daRunning;
+        document.documentElement.dataset.daRunning = '1';
+        try {
+          cup.click();
+          await handleBreakDialog(on);
+        } finally {
+          document.documentElement.dataset.daRunning = prevFlag || '0';
+          busy = false;
+        }
+      }
+    } catch (e) {
+      // put the state back so the panel (and the auto-return) stay correct
+      await setBreakState(on ? { on: false, lastEnd: now } : cur);
+      throw e;
+    }
+    return msg;
   }
 
   async function extendBreak(minutes) {
@@ -335,8 +361,8 @@ window.SDClock = (() => {
       if (ev.status === 'missed' && !(state.done[ev.key] || {})['missed_' + ev.kind]) {
         if (await claim(ev.key, 'missed_' + ev.kind)) {
           await markDone(ev.key, 'missed_' + ev.kind, Date.now());
-          await daLog('clock', `Missed scheduled ${daKindLabel(ev.kind).toLowerCase()} (no dialer tab open in time).`, { error: true });
-          chrome.runtime.sendMessage({ type: 'notify', title: `Missed ${daKindLabel(ev.kind).toLowerCase()}`, message: 'The dialer tab was not open at the scheduled time.' });
+          await daLog('clock', `Missed scheduled ${daKindLabel(ev.kind, state.cfg).toLowerCase()} (no dialer tab open in time).`, { error: true });
+          chrome.runtime.sendMessage({ type: 'notify', title: `Missed ${daKindLabel(ev.kind, state.cfg).toLowerCase()}`, message: 'The dialer tab was not open at the scheduled time.' });
         }
       }
       if (ev.status !== 'due' || busy) continue;
@@ -366,13 +392,13 @@ window.SDClock = (() => {
     if (b.on && b.plannedEnd && Date.now() >= b.plannedEnd && !busy && (await claim('break', String(b.since)))) {
       onEvent({ kind: 'break-end', phase: 'start' });
       try {
-        const msg = await performBreak(false, {
+        const msg = await performAway(false, {
           origin: 'auto',
-          beforeClick: m => chrome.runtime.sendMessage({ type: 'notify', title: "Sean's Dialer: break over", message: m })
+          beforeClick: m => chrome.runtime.sendMessage({ type: 'notify', title: `Sean's Dialer: ${DA_AWAY[daAwayType(b.type)].label.toLowerCase()} over`, message: m })
         });
         onEvent({ kind: 'break-end', phase: 'done', msg });
       } catch (e) {
-        await daLog('break', `Ending the break failed: ${e.message}`, { error: true });
+        await daLog('break', `Coming back from ${DA_AWAY[daAwayType(b.type)].label.toLowerCase()} failed: ${e.message}`, { error: true });
         chrome.runtime.sendMessage({ type: 'notify', title: 'Ending the break failed', message: e.message });
         onEvent({ kind: 'break-end', phase: 'error', msg: e.message });
         await sleep(20000);
@@ -382,24 +408,25 @@ window.SDClock = (() => {
 
   async function scheduledBreak(ev, state) {
     const label = daFmtHm(state.cfg.breaks[Number(ev.kind.slice(1))].start);
+    const name = DA_AWAY[ev.type].label;
     if (status() === 'out') {
       await markDone(ev.key, ev.kind, { at: Date.now(), msg: 'Skipped: clocked out.' });
-      await daLog('break', `Scheduled break at ${label} skipped: you were clocked out.`);
+      await daLog('break', `Scheduled ${name.toLowerCase()} at ${label} skipped: you were clocked out.`);
       return;
     }
-    onEvent({ kind: 'break', phase: 'start' });
+    onEvent({ kind: 'break', phase: 'start', type: ev.type });
     try {
-      const msg = await performBreak(true, {
-        minutes: ev.minutes, origin: 'schedule', label,
+      const msg = await performAway(true, {
+        type: ev.type, minutes: ev.minutes, origin: 'schedule', label,
         beforeClick: async m => {
           await markDone(ev.key, ev.kind, { at: Date.now(), msg: m });
-          chrome.runtime.sendMessage({ type: 'notify', title: "Sean's Dialer: break started", message: m });
+          chrome.runtime.sendMessage({ type: 'notify', title: `Sean's Dialer: ${name.toLowerCase()} started`, message: m });
         }
       });
       onEvent({ kind: 'break', phase: 'done', msg });
     } catch (e) {
-      await daLog('break', `Scheduled break at ${label} failed: ${e.message}`, { error: true });
-      chrome.runtime.sendMessage({ type: 'notify', title: 'Break failed', message: e.message });
+      await daLog('break', `Scheduled ${name.toLowerCase()} at ${label} failed: ${e.message}`, { error: true });
+      chrome.runtime.sendMessage({ type: 'notify', title: `${name} failed`, message: e.message });
       onEvent({ kind: 'break', phase: 'error', msg: e.message });
       await sleep(20000);
     }
@@ -416,11 +443,21 @@ window.SDClock = (() => {
     const msg = ok ? (p.kind === 'in' ? 'Clocked in.' : 'Clocked out.') : `Clicked "Clock ${p.kind}" but the dialer did not confirm it.`;
     const label = p.origin === 'schedule' ? `Scheduled clock ${p.kind}` : `Manual clock ${p.kind}`;
     if (ok && p.key) await markDone(p.key, p.kind, { at: p.at, msg });
+    if (p.origin === 'away' && ok) return; // already logged by the bio/lunch action
     await daLog('clock', `${label}: ${msg}`, ok ? { ok: true } : { error: true });
     if (p.origin === 'schedule' || !ok) {
       chrome.runtime.sendMessage({ type: 'notify', title: `Sean's Dialer: clock ${p.kind}${ok ? '' : ' failed'}`, message: msg });
     }
     onEvent({ kind: p.kind, phase: ok ? 'done' : 'error', msg });
+  }
+
+  // Also called when the background alarm pokes the tab (timers in hidden tabs
+  // are slowed down by the browser, alarms are not).
+  let ticking = false;
+  async function tickNow() {
+    if (ticking) return;
+    ticking = true;
+    try { await tick(); } catch (e) { /* keep ticking */ } finally { ticking = false; }
   }
 
   function start(hooks) {
@@ -431,7 +468,7 @@ window.SDClock = (() => {
     setInterval(() => scrapeSupervisors().catch(() => {}), 30000);
     setInterval(() => trackDialerClock().catch(() => {}), 1000);
     const loop = async () => {
-      try { await tick(); } catch (e) { /* keep ticking */ }
+      await tickNow();
       setTimeout(loop, 5000);
     };
     loop();
@@ -449,8 +486,9 @@ window.SDClock = (() => {
         throw e;
       }
     },
-    startBreak: minutes => performBreak(true, { minutes }),
-    endBreak: () => performBreak(false),
+    startAway: (type, minutes) => performAway(true, { type, minutes }),
+    endAway: () => performAway(false),
+    tickNow,
     extendBreak,
     hasCup: () => !!cupEl(),
     status,

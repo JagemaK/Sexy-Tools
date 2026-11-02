@@ -1,14 +1,15 @@
 {
   "manifest_version": 3,
   "name": "Sean's Dialer",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Caller lookup, automated dispositions and scheduled time clock for the Alliance dialer.",
   "permissions": [
     "storage",
     "unlimitedStorage",
     "clipboardWrite",
     "alarms",
-    "notifications"
+    "notifications",
+    "power"
   ],
   "host_permissions": [
     "http://69.10.47.54/*",

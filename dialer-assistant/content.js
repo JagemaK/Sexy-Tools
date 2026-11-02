@@ -436,6 +436,8 @@
     logout: '<svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>',
     user: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
     refresh: '<svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4L21 8M21 3v5h-5"/></svg>',
+    bio: '<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><path d="M9 22v-6H7l2-7h6l2 7h-2v6"/></svg>',
+    lunch: '<svg viewBox="0 0 24 24"><path d="M7 2v8a2 2 0 0 0 4 0V2M9 10v12M17 2c-2 1.5-3 4-3 7h3v13"/></svg>',
     cup: '<svg viewBox="0 0 24 24"><path d="M17 8h1a4 4 0 0 1 0 8h-1M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/><path d="M6 2v3M10 2v3M14 2v3"/></svg>',
     alert: '<svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>'
   };
@@ -570,12 +572,18 @@
     .hint { font-size: 11.5px; color: var(--mut); }
     .brk { border: 1px solid var(--line); border-radius: 11px; padding: 9px 10px; display: flex; flex-direction: column; gap: 8px; background: var(--soft); }
     .brk.on { background: #fffbeb; border-color: #fde68a; }
+    .brk .seg button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+    .brk .seg svg { width: 13px; height: 13px; }
+    .mins { max-width: 110px; } .mins input { text-align: right; } .mins span { color: var(--mut); font-size: 12px; }
+    .presets { display: flex; gap: 4px; flex-wrap: wrap; } .presets .chip { margin: 0; }
     .brk-h { display: flex; align-items: center; gap: 8px; font-weight: 700; }
     .brk-h .timer { color: #92400e; }
     .brk .inp select { padding: 6px 0; font-size: 13px; }
     .btn.amber { background: #f59e0b; color: #fff; } .btn.amber:hover { background: #d97706; }
-    .brow { display: flex; gap: 6px; align-items: center; margin-top: 6px; }
-    .brow .inp { flex: 1; } .brow .inp:first-child { flex: 1.3; } .brow .rm { border: 0; background: #fee2e2; color: #b91c1c; border-radius: 8px; width: 30px; height: 34px; cursor: pointer; display: grid; place-items: center; }
+    .brow { display: grid; grid-template-columns: 78px minmax(0, 1fr) 62px 30px; gap: 5px; align-items: center; margin-top: 6px; }
+    .brow .inp { min-width: 0; padding: 0 5px; gap: 2px; }
+    .brow select, .brow input { font-size: 12.5px; padding: 7px 0; min-width: 0; width: 100%; }
+    .brow .m input { text-align: right; } .brow .m span { color: var(--mut); font-size: 10.5px; } .brow .rm { border: 0; background: #fee2e2; color: #b91c1c; border-radius: 8px; width: 30px; height: 34px; cursor: pointer; display: grid; place-items: center; }
     /* activity */
     .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
     .stat { border: 1px solid var(--line); border-radius: 10px; padding: 7px 8px; background: var(--soft); text-align: center; }
@@ -719,10 +727,14 @@
     });
     els.ckForm.addEventListener('change', () => saveClockForm(false));
     els.ckLive.addEventListener('change', e => {
-      if (e.target.id !== 'brMin') return;
-      const ui = loadUi(); ui.brMin = Number(e.target.value); saveUi(ui);
+      if (e.target.id !== 'awMin') return;
+      const ui = loadUi();
+      ui.awayMin = Object.assign({}, ui.awayMin, { [ui.awayType || 'break']: Math.max(0, Number(e.target.value) || 0) });
+      saveUi(ui);
       e.target.blur();
+      liveTick();
     });
+    els.ckLive.addEventListener('keydown', e => { if (e.target.id === 'awMin' && e.key === 'Enter') e.target.blur(); });
 
     initDragResize($('head'));
 
@@ -993,7 +1005,7 @@
     // header line: dialer time + clock status
     els.hsub.title = hasDialerClock ? 'Dialer time' : 'This PC (dialer clock not seen yet)';
     els.hsub.innerHTML = `${ICON.clock}<b>${hasDialerClock ? fmtTime(dialerNow) : fmtTime(new Date())}</b>` +
-      (brk.on ? `<span class="pill pb">BREAK ${clockFmt(Date.now() - brk.since)}</span>`
+      (brk.on ? `<span class="pill pb">${DA_AWAY[daAwayType(brk.type)].label.toUpperCase()} ${clockFmt(Date.now() - brk.since)}</span>`
         : st ? `<span class="pill ${st}">${st === 'in' ? 'IN' : 'OUT'}${st === 'in' && timer ? ' ' + timer : ''}</span>` : '');
 
     // countdown / result banner (shown on every tab, even minimized)
@@ -1001,12 +1013,14 @@
     let banner = '';
     const brkLeft = brk.on && brk.plannedEnd ? brk.plannedEnd - Date.now() : null;
     if (brkLeft != null && brkLeft <= Math.max(cfg.warnMin, 1) * 60000) {
-      banner = `<div class="banner on warn">${ICON.cup}<span>Break ends ${brkLeft > 0 ? 'in ' + fmtIn(brkLeft) : 'now…'}</span><span class="sp"></span>
+      const bt = daAwayType(brk.type);
+      const what = DA_AWAY[bt].method === 'clock' ? 'Clocking back in' : 'Break ends';
+      banner = `<div class="banner on warn">${ICON[bt === 'break' ? 'cup' : bt]}<span>${what} ${brkLeft > 0 ? 'in ' + fmtIn(brkLeft) : 'now…'}</span><span class="sp"></span>
         <button class="btn sm ghost" data-act="br-ext" data-v="5">+5 min</button>
         <button class="btn sm ghost" data-act="br-end">End now</button></div>`;
     } else if (warn) {
       const left = warn.at - Date.now();
-      banner = `<div class="banner on warn">${warn.kind[0] === 'b' ? ICON.cup : ICON.alert}<span>${daKindLabel(warn.kind)} ${left > 0 ? 'in ' + fmtIn(left) : 'now…'}</span><span class="sp"></span>
+      banner = `<div class="banner on warn">${warn.kind[0] === 'b' ? ICON[warn.type === 'break' ? 'cup' : warn.type] : ICON.alert}<span>${daKindLabel(warn.kind, cfg)} ${left > 0 ? 'in ' + fmtIn(left) : 'now…'}</span><span class="sp"></span>
         <button class="btn sm ghost" data-act="ck-skip" data-v="${warn.kind}">Skip today</button></div>`;
     } else if (clockMsg && Date.now() - clockMsg.at < 15000) {
       banner = `<div class="banner on ${clockMsg.err ? 'err' : 'ok'}">${clockMsg.err ? ICON.alert : ICON.check}<span>${esc(clockMsg.text)}</span></div>`;
@@ -1019,7 +1033,7 @@
 
     if ((loadUi().tab || 'lookup') !== 'clock') return;
     // don't redraw under an open dropdown
-    if (els.ckLive.contains(shadow.activeElement) && shadow.activeElement.tagName === 'SELECT') return;
+    if (els.ckLive.contains(shadow.activeElement) && ['SELECT', 'INPUT'].includes(shadow.activeElement.tagName)) return;
     const pcNow = new Date();
     const diffMin = Math.round(offsetMs / 60000);
     const diffText = !hasDialerClock ? 'Dialer clock not seen yet (open the dialer page with the top bar).'
@@ -1032,7 +1046,7 @@
     if (cfg.enabled && plan.next) {
       const w = wallOf(plan.next.at);
       const isToday = plan.next.key === plan.key;
-      next = `${ICON.clock}<span>Next: <b>${daKindLabel(plan.next.kind)}</b> ${isToday ? 'today' : w.toLocaleDateString([], { weekday: 'short' })} at <b>${fmtTime(w, false)}</b> · in ${fmtIn(plan.next.at - Date.now())}</span>`;
+      next = `${ICON.clock}<span>Next: <b>${daKindLabel(plan.next.kind, cfg)}</b> ${isToday ? 'today' : w.toLocaleDateString([], { weekday: 'short' })} at <b>${fmtTime(w, false)}</b> · in ${fmtIn(plan.next.at - Date.now())}</span>`;
     }
     const today = cfg.enabled ? plan.today.filter(e => e.status !== 'off').map(e => {
       const r = e.result && e.result.at ? ` · ${fmtTime(new Date(e.result.at), false)}` : '';
@@ -1040,17 +1054,36 @@
         ? `<a class="lnk" data-act="ck-unskip" data-v="${e.kind}">undo</a>`
         : ['upcoming', 'warn'].includes(e.status) ? `<a class="lnk" data-act="ck-skip" data-v="${e.kind}">skip today</a>` : '';
       const at = e.kind === 'in' ? cfg.inTime : e.kind === 'out' ? cfg.outTime : cfg.breaks[Number(e.kind.slice(1))].start;
-      return `<div><span class="tag ${e.status}">${e.status}</span>${daKindLabel(e.kind)} ${daFmtHm(at)}${e.minutes ? ` · ${e.minutes} min` : ''}${r} ${skip}</div>`;
+      return `<div><span class="tag ${e.status}">${e.status}</span>${daKindLabel(e.kind, cfg)} ${daFmtHm(at)}${e.minutes ? ` · ${e.minutes} min` : ''}${r} ${skip}</div>`;
     }).join('') : '';
-    const brkHtml = brk.on
-      ? `<div class="brk on"><div class="brk-h">${ICON.cup} On break <span class="timer">${clockFmt(Date.now() - brk.since)}</span></div>
-          <div class="hint">${brk.plannedEnd ? `Back at <b>${fmtTime(wallOf(brk.plannedEnd), false)}</b> · in ${fmtIn(brk.plannedEnd - Date.now())} (the tea cup is turned off automatically)` : 'Until you end it.'}</div>
-          <div class="row2"><button class="btn green" data-act="br-end">${ICON.check} End break</button>
-            <button class="btn ghost" data-act="br-ext" data-v="5">+5 min</button></div></div>`
-      : `<div class="brk"><div class="brk-h">${ICON.cup} Break</div>
-          <div class="field"><label class="inp"><select id="brMin">${[[15, '15 min'], [30, '30 min'], [45, '45 min'], [60, '1 hour'], [0, 'Until I end it']]
-            .map(([v, t]) => `<option value="${v}" ${v === (loadUi().brMin ?? 15) ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
-            <button class="btn amber" data-act="br-start" ${st === 'out' ? 'disabled title="Clocked out"' : ''}>${ICON.cup} Start break</button></div></div>`;
+    const ui = loadUi();
+    const awType = daAwayType(ui.awayType);
+    const awMin = (ui.awayMin && ui.awayMin[awType] != null) ? ui.awayMin[awType] : DA_AWAY[awType].minutes;
+    const icoOf = t => ICON[t === 'break' ? 'cup' : t];
+    let brkHtml;
+    if (brk.on) {
+      const bt = daAwayType(brk.type), info = DA_AWAY[bt];
+      const back = info.method === 'clock' ? 'clocks you back in' : 'turns the tea cup off';
+      brkHtml = `<div class="brk on"><div class="brk-h">${icoOf(bt)} On ${info.label.toLowerCase()}${info.method === 'clock' ? ' (clocked out)' : ''}
+            <span class="timer">${clockFmt(Date.now() - brk.since)}</span></div>
+          <div class="hint">${brk.plannedEnd ? `Back at <b>${fmtTime(wallOf(brk.plannedEnd), false)}</b> · in ${fmtIn(brk.plannedEnd - Date.now())}. It ${back} automatically, even with the screen off.` : 'Until you end it.'}</div>
+          <div class="row2"><button class="btn green" data-act="br-end">${ICON.check} ${info.method === 'clock' ? 'Clock in now' : 'End break'}</button>
+            <button class="btn ghost" data-act="br-ext" data-v="5">+5 min</button></div></div>`;
+    } else {
+      const info = DA_AWAY[awType];
+      brkHtml = `<div class="brk">
+          <div class="seg">${Object.keys(DA_AWAY).map(t =>
+            `<button data-act="aw-type" data-v="${t}" class="${t === awType ? 'on' : ''}">${icoOf(t)} ${DA_AWAY[t].label}</button>`).join('')}</div>
+          <div class="field">
+            <label class="inp mins"><input type="number" id="awMin" min="0" max="600" value="${awMin}"><span>min</span></label>
+            <button class="btn amber" style="flex:1" data-act="br-start" ${st === 'out' ? 'disabled title="Clocked out"' : ''}>${icoOf(awType)} ${info.method === 'clock' ? 'Clock out for ' + info.label.toLowerCase() : 'Start break'}</button>
+          </div>
+          <div class="presets">${[5, 10, 15, 30, 45, 60].map(m => `<span class="chip" data-act="aw-min" data-v="${m}">${m}m</span>`).join('')}</div>
+          <div class="hint">${info.method === 'clock'
+            ? `Clocks you out now and <b>clocks you back in after ${awMin || '…'} min</b> by itself.`
+            : `Clicks the tea cup now and turns it off after ${awMin ? awMin + ' min' : 'you end it'}.`} 0 = until you end it.</div>
+        </div>`;
+    }
     els.ckLive.innerHTML = `
       <div class="status">${stHtml}<span class="timer" title="Shift timer from the dialer">${esc(timer)}</span></div>
       <div class="clocks">
@@ -1091,14 +1124,16 @@
           <div class="field"><label class="inp">${ICON.user}<select id="ckSup">${supOpts.join('')}</select></label>
             <button class="btn ghost sm" data-act="ck-sup" title="Change the supervisor in the dialer now">Set now</button></div>
         </div>
-        <div><div class="flab" style="display:flex;justify-content:space-between">Breaks (tea cup)
-            <a class="lnk" data-act="ck-addbrk">+ Add break</a></div>
+        <div><div class="flab" style="display:flex;justify-content:space-between">Breaks, bio &amp; lunch
+            <span><a class="lnk" data-act="ck-addbrk" data-v="break">+ Break</a> · <a class="lnk" data-act="ck-addbrk" data-v="bio">+ Bio</a> · <a class="lnk" data-act="ck-addbrk" data-v="lunch">+ Lunch</a></span></div>
           ${(cfg.breaks || []).map((b, i) => `<div class="brow">
-            <label class="inp"><input type="time" class="brStart" value="${esc(b.start)}"></label>
-            <label class="inp"><select class="brLen">${[5, 10, 15, 20, 30, 45, 60].map(m =>
-              `<option value="${m}" ${Number(b.minutes) === m ? 'selected' : ''}>${m} min</option>`).join('')}</select></label>
+            <label class="inp"><select class="brType">${Object.keys(DA_AWAY).map(t =>
+              `<option value="${t}" ${daAwayType(b.type) === t ? 'selected' : ''}>${DA_AWAY[t].label}</option>`).join('')}</select></label>
+            <label class="inp t"><input type="time" class="brStart" value="${esc(b.start)}" title="${DA_AWAY[daAwayType(b.type)].method === 'clock' ? 'Clock out at' : 'Tea cup on at'}"></label>
+            <label class="inp m" title="${DA_AWAY[daAwayType(b.type)].method === 'clock' ? 'Clock back in after (minutes)' : 'Tea cup off after (minutes)'}"><input type="number" class="brLen" min="1" max="600" value="${Number(b.minutes) || DA_AWAY[daAwayType(b.type)].minutes}"><span>min</span></label>
             <button class="rm" data-act="ck-rmbrk" data-v="${i}" title="Remove">${ICON.x}</button></div>`).join('')
-            || '<div class="hint">No scheduled breaks.</div>'}
+            || '<div class="hint">Nothing scheduled.</div>'}
+          <div class="hint" style="margin-top:6px">Break = tea cup on/off. Bio &amp; lunch = clock out at the time, then clock back in after the minutes.</div>
         </div>
         <div><div class="flab">Use time from</div><div class="seg">
           <button data-act="ck-src" data-v="dialer" class="${cfg.source === 'dialer' ? 'on' : ''}">Dialer time</button>
@@ -1109,7 +1144,8 @@
           <div><div class="flab">Late by up to</div><label class="inp"><select id="ckGrace">${[5, 15, 30, 60].map(m =>
             `<option value="${m}" ${cfg.graceMin === m ? 'selected' : ''}>${m} min</option>`).join('')}</select></label></div>
         </div>
-        <div class="hint">Keep a dialer tab open (Edge opens one by itself a few minutes before). Times already past today are skipped when you change the schedule.</div>`;
+        <label class="switch"><span>Keep this PC awake <span class="hint">(screen can still turn off)</span></span><input type="checkbox" id="ckAwake" ${cfg.keepAwake !== false ? 'checked' : ''}><span class="t"></span></label>
+        <div class="hint">Works with the screen off or locked, as long as Edge is running and the PC isn't shut down. If no dialer tab is open, Edge opens one a few minutes before. Times already past today are skipped when you change the schedule.</div>`;
     });
   }
 
@@ -1123,8 +1159,11 @@
       supervisor: $('ckSup').value,
       warnMin: Number($('ckWarn').value),
       graceMin: Number($('ckGrace').value),
+      keepAwake: $('ckAwake').checked,
       breaks: [...shadow.querySelectorAll('.brow')].map(r => ({
-        start: r.querySelector('.brStart').value || '12:00', minutes: Number(r.querySelector('.brLen').value) }))
+        type: r.querySelector('.brType').value,
+        start: r.querySelector('.brStart').value || '12:00',
+        minutes: Math.max(1, Number(r.querySelector('.brLen').value) || DA_AWAY[r.querySelector('.brType').value].minutes) }))
     }, patch || {});
     await chrome.storage.local.set({ clock: cfg });
     // Don't fire for times that already passed today when the schedule changes.
@@ -1149,7 +1188,7 @@
       } else if (act === 'ck-addbrk' || act === 'ck-rmbrk') {
         const { cfg } = await daGetClock();
         const breaks = (cfg.breaks || []).slice();
-        if (act === 'ck-addbrk') breaks.push({ start: '12:00', minutes: 15 });
+        if (act === 'ck-addbrk') breaks.push({ type: v, start: '12:00', minutes: DA_AWAY[v].minutes });
         else breaks.splice(Number(v), 1);
         await chrome.storage.local.set({ clock: Object.assign({}, cfg, { breaks }) });
         renderClockForm(true);
@@ -1157,21 +1196,30 @@
         if (btn) btn.disabled = true;
         let msg;
         if (act === 'br-ext') { await SDC.extendBreak(Number(v)); msg = `Break extended by ${v} min`; }
-        else if (act === 'br-end') msg = await SDC.endBreak();
+        else if (act === 'br-end') msg = await SDC.endAway();
         else {
-          const minutes = Number(shadow.getElementById('brMin').value);
-          const ui = loadUi(); ui.brMin = minutes; saveUi(ui);
-          msg = await SDC.startBreak(minutes);
+          const ui = loadUi();
+          const type = daAwayType(ui.awayType);
+          const minutes = Math.max(0, Number(shadow.getElementById('awMin').value) || 0);
+          ui.awayMin = Object.assign({}, ui.awayMin, { [type]: minutes });
+          saveUi(ui);
+          msg = await SDC.startAway(type, minutes);
         }
         clockMsg = { text: msg, at: Date.now() };
         toast(msg);
+      } else if (act === 'aw-type' || act === 'aw-min') {
+        const ui = loadUi();
+        if (act === 'aw-type') ui.awayType = v;
+        else ui.awayMin = Object.assign({}, ui.awayMin, { [daAwayType(ui.awayType)]: Number(v) });
+        saveUi(ui);
+        liveTick();
       } else if (act === 'ck-src') {
         await saveClockForm(false, { source: v });
         renderClockForm(true);
       } else if (act === 'ck-skip' || act === 'ck-unskip') {
         const plan = daClockPlan(await daGetClock());
         await SDC.skip(plan.key, v, act === 'ck-skip');
-        await daLog('clock', `${act === 'ck-skip' ? 'Skipped' : 'Un-skipped'} today's ${daKindLabel(v).toLowerCase()}.`);
+        await daLog('clock', `${act === 'ck-skip' ? 'Skipped' : 'Un-skipped'} today's ${daKindLabel(v, (await daGetClock()).cfg).toLowerCase()}.`);
         liveTick();
       } else if (act === 'ck-readsup') {
         toast('Reading supervisors…');
@@ -1211,7 +1259,7 @@
     const brkMs = today.reduce((t, a) => t + (a.breakMs || 0), 0) + (brk.on ? Date.now() - brk.since : 0);
     els.stats.innerHTML = `
       <div class="stat"><b>${count('lookup')}</b><small>Lookups</small></div>
-      <div class="stat"><b>${Math.round(brkMs / 60000)}m</b><small>On break</small></div>
+      <div class="stat"><b>${Math.round(brkMs / 60000)}m</b><small>Away</small></div>
       <div class="stat"><b>${runs}</b><small>Runs done</small></div>
       <div class="stat"><b>${count('call')}</b><small>Zoiper calls</small></div>`;
     const icon = { break: ICON.cup, lookup: ICON.search, run: ICON.play, call: ICON.phone, clock: ICON.clock, search: ICON.search };
@@ -1248,6 +1296,7 @@
   }
 
   chrome.runtime.onMessage.addListener(msg => {
+    if (msg.type === 'clockTick' && window.SDClock) window.SDClock.tickNow();
     if (msg.type === 'incomingCall') incomingCall(msg.phone);
     if (msg.type === 'togglePanel') setCollapsed(!loadUi().collapsed);
     if (msg.type === 'focusPhone') {
@@ -1267,7 +1316,7 @@
       window.SDClock.start({
         isJobRunning: () => { const j = loadJob(); return !!(j && j.running); },
         onEvent: ev => {
-          const starting = { in: 'Clocking in', out: 'Clocking out', break: 'Starting break', 'break-end': 'Ending break' };
+          const starting = { in: 'Clocking in', out: 'Clocking out', break: `Starting ${ev.type ? DA_AWAY[ev.type].label.toLowerCase() : 'break'}`, 'break-end': 'Coming back' };
           if (ev.phase === 'start') clockMsg = { text: `${starting[ev.kind] || 'Working'}…`, at: Date.now() };
           else clockMsg = { text: ev.msg, err: ev.phase === 'error', at: Date.now() };
           liveTick();

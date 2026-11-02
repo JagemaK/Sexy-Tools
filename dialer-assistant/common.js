@@ -89,17 +89,32 @@ const DA_CLOCK_DEFAULTS = {
   source: 'dialer', // 'dialer' (time shown in the dialer's top bar) or 'system'
   warnMin: 1, // countdown shown before acting
   graceMin: 15, // still act if the tab was closed/asleep at the exact minute
-  breaks: [] // [{ start: '10:30', minutes: 15 }] — tea cup on at start, off after `minutes`
+  // [{ start: '10:30', minutes: 15, type: 'break' | 'bio' | 'lunch' }]
+  // break = tea cup on/off; bio & lunch = clock out, then clock back in after `minutes`
+  breaks: [],
+  keepAwake: true // keep Windows from sleeping while the schedule or an away timer is on
 };
 
+const DA_AWAY = {
+  break: { label: 'Break', method: 'cup', minutes: 15 },
+  bio: { label: 'Bio', method: 'clock', minutes: 5 },
+  lunch: { label: 'Lunch', method: 'clock', minutes: 30 }
+};
+const daAwayType = t => (DA_AWAY[t] ? t : 'break');
+
 // Schedule event kinds: 'in', 'out', and 'b0', 'b1', ... (start of break #n).
-function daKindLabel(kind) {
-  return kind === 'in' ? 'Clock in' : kind === 'out' ? 'Clock out' : 'Break';
+function daKindLabel(kind, cfg) {
+  if (kind === 'in') return 'Clock in';
+  if (kind === 'out') return 'Clock out';
+  const b = cfg && cfg.breaks && cfg.breaks[Number(kind.slice(1))];
+  return DA_AWAY[daAwayType(b && b.type)].label;
 }
 
 function daScheduleEvents(cfg) {
   return [{ kind: 'in', min: daHmToMin(cfg.inTime) }, { kind: 'out', min: daHmToMin(cfg.outTime) }]
-    .concat((cfg.breaks || []).map((b, i) => ({ kind: 'b' + i, min: daHmToMin(b.start), minutes: Number(b.minutes) || 15 })))
+    .concat((cfg.breaks || []).map((b, i) => ({
+      kind: 'b' + i, min: daHmToMin(b.start), type: daAwayType(b.type),
+      minutes: Number(b.minutes) || DA_AWAY[daAwayType(b.type)].minutes })))
     .filter(e => e.min != null);
 }
 
@@ -144,7 +159,7 @@ function daClockPlan({ cfg, offsetMs, done }, now = Date.now()) {
   const nowMin = wall.getHours() * 60 + wall.getMinutes() + wall.getSeconds() / 60;
   const todayOn = cfg.enabled && cfg.days.includes(wall.getDay());
   const rec = done[key] || {};
-  const today = daScheduleEvents(cfg).map(({ kind, min: tMin, minutes }) => {
+  const today = daScheduleEvents(cfg).map(({ kind, min: tMin, minutes, type }) => {
     const at = now + (tMin - nowMin) * 60000; // real ms of the event
     let status = 'upcoming';
     if (!todayOn || tMin == null) status = 'off';
@@ -153,7 +168,7 @@ function daClockPlan({ cfg, offsetMs, done }, now = Date.now()) {
     else if (nowMin >= tMin + cfg.graceMin) status = 'missed';
     else if (nowMin >= tMin) status = 'due';
     else if (nowMin >= tMin - cfg.warnMin) status = 'warn';
-    return { kind, at, status, key, minutes, result: rec[kind] };
+    return { kind, at, status, key, minutes, type, result: rec[kind] };
   });
   let next = today.filter(e => ['upcoming', 'warn', 'due'].includes(e.status)).sort((a, b) => a.at - b.at)[0];
   if (!next && cfg.enabled) {

@@ -46,23 +46,62 @@ async function forwardCall(phone, fromTab) {
   return { handleHere: true };
 }
 
-// Time clock safety net: the clock in/out itself happens in a dialer tab, so
-// make sure one is open shortly before a scheduled event.
-chrome.alarms.create('clock-check', { periodInMinutes: 1 });
-chrome.alarms.onAlarm.addListener(async alarm => {
-  if (alarm.name !== 'clock-check') return;
-  const state = await daGetClock();
-  if (!state.cfg.enabled) return;
-  const soon = daClockPlan(state).today.find(e =>
-    ['upcoming', 'warn', 'due'].includes(e.status) && e.at - Date.now() < 3 * 60000);
-  if (!soon) return;
+// ---------- Time clock keep-alive ----------
+// The clicking happens in a dialer tab. With the screen off / Edge in the
+// background, the browser slows timers in hidden tabs and may put tabs to
+// sleep, and Windows may go to sleep. So:
+//  - keep the system awake (screen may still turn off) while the schedule or an away timer is on,
+//  - stop Edge from sleeping/discarding dialer tabs (and reload one that was),
+//  - wake the tab with alarms: every 30 s, plus one at the exact next event time,
+//  - open a dialer tab if none is open shortly before an event.
+function setAwake(on) {
+  if (!chrome.power) return;
+  if (on) chrome.power.requestKeepAwake('system'); // both calls are idempotent
+  else chrome.power.releaseKeepAwake();
+}
+
+async function pokeTabs(reason) {
   const tabs = await chrome.tabs.query({ url: DIALER_URLS });
-  if (tabs.length) return;
-  const { lastOrigin, settings } = await chrome.storage.local.get(['lastOrigin', 'settings']);
-  const path = (settings && settings.searchPath) || DA_DEFAULTS.searchPath;
-  chrome.tabs.create({ url: (lastOrigin || 'http://proxy2.alliancedialer.com') + path, active: false });
-  daLog('clock', `Opened a dialer tab for the scheduled clock ${soon.kind}.`);
+  for (const t of tabs) {
+    if (t.autoDiscardable) chrome.tabs.update(t.id, { autoDiscardable: false }).catch(() => {});
+    if (t.discarded) { chrome.tabs.reload(t.id).catch(() => {}); continue; }
+    chrome.tabs.sendMessage(t.id, { type: 'clockTick', reason }).catch(() => {});
+  }
+  return tabs;
+}
+
+async function clockHeartbeat(reason) {
+  const state = await daGetClock();
+  const away = state.breakState && state.breakState.on && state.breakState.plannedEnd;
+  setAwake(!!((state.cfg.enabled || away) && state.cfg.keepAwake !== false));
+  if (!state.cfg.enabled && !away) return;
+
+  const plan = daClockPlan(state);
+  const upcoming = plan.today.filter(e => ['upcoming', 'warn', 'due'].includes(e.status)).map(e => e.at);
+  if (away) upcoming.push(state.breakState.plannedEnd);
+  if (plan.next) upcoming.push(plan.next.at);
+  const nextAt = Math.min(...upcoming.filter(t => t > Date.now() - 60000), Infinity);
+  if (nextAt !== Infinity) chrome.alarms.create('clock-exact', { when: Math.max(nextAt, Date.now() + 1000) + 500 });
+
+  const tabs = await pokeTabs(reason);
+  if (!tabs.length && nextAt - Date.now() < 3 * 60000) {
+    const { lastOrigin, settings } = await chrome.storage.local.get(['lastOrigin', 'settings']);
+    const path = (settings && settings.searchPath) || DA_DEFAULTS.searchPath;
+    chrome.tabs.create({ url: (lastOrigin || 'http://proxy2.alliancedialer.com') + path, active: false });
+    daLog('clock', 'Opened a dialer tab for an upcoming scheduled action.');
+  }
+}
+
+chrome.alarms.create('clock-check', { periodInMinutes: 0.5 });
+chrome.alarms.onAlarm.addListener(alarm => {
+  if (alarm.name === 'clock-check' || alarm.name === 'clock-exact') clockHeartbeat(alarm.name);
 });
+chrome.storage.onChanged.addListener(ch => {
+  if (ch.clock || ch.breakState) clockHeartbeat('changed');
+});
+chrome.runtime.onStartup.addListener(() => clockHeartbeat('startup'));
+chrome.runtime.onInstalled.addListener(() => clockHeartbeat('installed'));
+clockHeartbeat('loaded');
 
 chrome.commands.onCommand.addListener(async (command, tab) => {
   if (command === 'focus-phone' && tab) chrome.tabs.sendMessage(tab.id, { type: 'focusPhone' }).catch(() => {});
