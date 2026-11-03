@@ -7,8 +7,8 @@
 ## 1. Numbers: know them cold
 All placeholders are filled in. Call volumes and tools come from you. These are estimated averages, so make sure you
 can back them up in an interview:
-- MMCY: 12+ qualified meetings/month, 110% of target, $150K+ pipeline, ~20% Upwork reply rate
-- 3BL Studios: 8+ qualified meetings/month (part-time)
+- MMCY: 8+ qualified meetings/month, at or above target, $80K+ pipeline, ~15% Upwork reply rate
+- 3BL Studios: 5+ qualified meetings/month (part-time)
 
 Change any of these in the .docx if your real numbers differ. Interviewers will ask "how did you calculate that?"
 
