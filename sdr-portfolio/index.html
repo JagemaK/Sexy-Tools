@@ -9,6 +9,7 @@
 <meta property="og:description" content="Phone-first SDR with a ready-to-run outbound playbook for quote-to-contract SaaS.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#0a0f1c">
+<meta property="og:image" content="https://samuel-erkuye-sdr.vercel.app/samuel.jpg">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23c6ff3d'/><text x='50' y='68' font-size='52' font-family='Arial' font-weight='700' text-anchor='middle' fill='%230a0f1c'>SE</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -43,7 +44,18 @@ section{padding:88px 0}
 nav{position:sticky;top:0;z-index:50;background:rgba(10,15,28,.78);backdrop-filter:blur(14px);border-bottom:1px solid rgba(36,48,79,.6)}
 nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px;gap:16px}
 .logo{font-family:"Space Grotesk";font-weight:700;font-size:18px;text-decoration:none;display:flex;align-items:center;gap:10px}
-.logo span{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:14px}
+.logo img{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid var(--accent)}
+.hero-side{position:relative}
+.portrait{position:relative;border-radius:26px;overflow:hidden;border:1px solid var(--line);height:430px;box-shadow:0 40px 80px -40px rgba(0,0,0,.9)}
+.portrait img{width:100%;height:100%;object-fit:cover;object-position:50% 28%;display:block}
+.portrait::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(10,15,28,.85))}
+.nameplate{position:absolute;left:18px;top:18px;z-index:1;display:flex;align-items:center;gap:10px;background:rgba(10,15,28,.72);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);padding:9px 14px;border-radius:14px}
+.nameplate b{display:block;font-family:"Space Grotesk";font-size:15px;line-height:1.2}
+.nameplate small{color:var(--muted);font-size:12px}
+.nameplate .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+.hero-side .callcard{position:relative;z-index:2;margin:-80px 14px 0}
+@media(max-width:600px){.portrait{height:400px}.hero-side .callcard{margin:-70px 6px 0;padding:18px}}
+.final .avatar{width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid var(--accent);box-shadow:0 0 0 8px rgba(198,255,61,.1);margin:0 auto 18px;display:block}
 .navlinks{display:flex;gap:26px;font-size:14px;color:var(--muted)}
 .navlinks a{text-decoration:none}.navlinks a:hover{color:var(--text)}
 nav .btn{padding:10px 18px;font-size:14px}
@@ -74,7 +86,7 @@ nav .btn{padding:10px 18px;font-size:14px}
 .clocks{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .clock{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:12px}
 .clock small{display:block;color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
-.clock strong{font-family:"Space Grotesk";font-size:22px}
+.clock strong{font-family:"Space Grotesk";font-size:20px;white-space:nowrap}
 .clock.me{border-color:rgba(198,255,61,.4)}
 .dialer{margin-top:16px;background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:16px}
 .dialer .row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:8px}
@@ -86,7 +98,7 @@ nav .btn{padding:10px 18px;font-size:14px}
 .strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bg2);padding:28px 0}
 .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:20px}
 @media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}}
-.stat strong{font-family:"Space Grotesk";font-size:34px;display:block;line-height:1}
+.stat strong{font-family:"Space Grotesk";font-size:clamp(26px,3vw,34px);display:block;line-height:1}
 .stat span{color:var(--muted);font-size:14px}
 
 /* match table */
@@ -226,7 +238,7 @@ footer{color:var(--dim);font-size:13px;text-align:center;padding:0 0 40px}
 
 <nav>
   <div class="wrap">
-    <a class="logo" href="#top"><span>SE</span>Samuel Erkuye</a>
+    <a class="logo" href="#top"><img src="samuel-avatar.jpg" alt="" width="34" height="34">Samuel Erkuye</a>
     <div class="navlinks">
       <a href="#fit">Why I fit</a>
       <a href="#playbook">My playbook</a>
@@ -242,17 +254,18 @@ footer{color:var(--dim);font-size:13px;text-align:center;padding:0 0 40px}
     <div>
       <div class="badge"><b>Applying</b> Sales Development Representative · Role 0264 · Remote Growth Partners</div>
       <h1>I get revenue leaders <em>on the phone</em> and into your calendar.</h1>
-      <p class="sub">Phone-first SDR with <strong>2+ years of B2B outbound</strong>, used to <strong>high-volume calls with U.S. contacts on U.S. hours</strong>. I've also written the proposals and business cases that come after the meeting. Below is the playbook I'd use to book meetings with <strong>CROs, RevOps and Finance leaders</strong> for a quote-to-contract platform.</p>
+      <p class="sub">Phone-first SDR with <strong>2+ years of B2B outbound</strong> and <strong>150–250+ dials a day</strong> with U.S. contacts on U.S. hours. I've already <strong>built a sales department from scratch</strong> as a company's first sales hire. Below is the playbook I'd use to book meetings with <strong>CROs, RevOps and Finance leaders</strong> for a quote-to-contract platform.</p>
       <div class="cta-row">
         <a class="btn btn-primary js-book" href="#contact">Let's book the interview →</a>
         <a class="btn btn-ghost" href="#playbook">See my outbound playbook ↓</a>
       </div>
     </div>
 
-    <aside class="callcard reveal" aria-label="Availability on U.S. hours">
+    <aside class="hero-side reveal">
+      <div class="portrait"><img src="samuel.jpg" alt="Samuel Erkuye" width="720" height="960"><div class="nameplate"><span class="dot"></span><div><b>Samuel Erkuye</b><small>SDR · Addis Ababa · on U.S. hours</small></div></div></div>
+    <div class="callcard" aria-label="Availability on U.S. hours">
       <div class="top">
         <span class="live" id="liveState"><i></i><span id="liveText">On the phones</span></span>
-        <span style="color:var(--dim);font-size:13px">U.S. hours, every day</span>
       </div>
       <div class="clocks">
         <div class="clock"><small>San Francisco</small><strong id="c-pt">--:--</strong></div>
@@ -260,12 +273,13 @@ footer{color:var(--dim);font-size:13px;text-align:center;padding:0 0 40px}
         <div class="clock me"><small>Me · Addis</small><strong id="c-me">--:--</strong></div>
       </div>
       <div class="dialer">
-        <div class="row"><span>Daily dial target</span><span><b style="color:var(--text)" id="dialCount">0</b> / 80+</span></div>
+        <div class="row"><span>Daily dial target</span><span><b style="color:var(--text)" id="dialCount">0</b> / 150+</span></div>
         <div class="bar"><span id="dialBar"></span></div>
         <div class="row" style="margin:14px 0 8px"><span>Meetings booked for leadership</span><span style="color:var(--accent);font-weight:700">every week</span></div>
         <div class="bar"><span id="mtgBar" style="background:linear-gradient(90deg,var(--pink),var(--amber))"></span></div>
       </div>
       <p class="note">9:00 AM in New York is 5:00 PM in Addis. My workday runs on your clock, not mine.</p>
+    </div>
     </aside>
   </div>
 </header>
@@ -273,10 +287,10 @@ footer{color:var(--dim);font-size:13px;text-align:center;padding:0 0 40px}
 <div class="strip">
   <div class="wrap stats">
     <div class="stat reveal"><strong class="hl">2+ yrs</strong><span>B2B sales &amp; business development</span></div>
-    <div class="stat reveal"><strong>80+</strong><span>dials a day, phone-first</span></div>
-    <div class="stat reveal"><strong>U.S.</strong><span>contacts &amp; business hours</span></div>
-    <div class="stat reveal"><strong>C1</strong><span>English: written &amp; spoken</span></div>
-    <div class="stat reveal"><strong>&lt;/&gt;</strong><span>Writes code: learns SaaS fast</span></div>
+    <div class="stat reveal"><strong>150–250+</strong><span>outbound dials a day</span></div>
+    <div class="stat reveal"><strong>80–150+</strong><span>inbound calls a day</span></div>
+    <div class="stat reveal"><strong>12+</strong><span>qualified meetings a month</span></div>
+    <div class="stat reveal"><strong>0 → 1</strong><span>sales department built from scratch</span></div>
   </div>
 </div>
 
@@ -289,21 +303,21 @@ footer{color:var(--dim);font-size:13px;text-align:center;padding:0 0 40px}
 
     <div class="match">
       <div class="mrow reveal"><div class="req">2+ years in B2B sales, business development or outbound prospecting</div>
-        <div class="proof"><b>Apr 2024 → today</b> at MMCY Tech: started as an SDR, promoted to Business &amp; Sales Development Rep. Before that, Assistant Business Developer at EAFMG.</div></div>
+        <div class="proof"><b>Apr 2024 → today</b> at MMCY Tech: started as an SDR, promoted to Business &amp; Sales Development Rep. Plus <b>3BL Studios (2026)</b>, where I was the first sales hire, and Assistant Business Developer at EAFMG before that.</div></div>
       <div class="mrow reveal"><div class="req">Experience selling SaaS / B2B software</div>
         <div class="proof">I sell MMCY's <b>software development and IT solutions</b> to B2B clients: prospecting, demos, business cases, through to closing.</div></div>
       <div class="mrow reveal"><div class="req">Understands quotes, pricing approvals, proposals and deal progression</div>
         <div class="proof">I <b>write the proposals and business cases</b> that tie scope and price to a client's goals, plus personalized bids on Upwork. As CFO of a student enterprise I built budgets and revenue targets, so I know what Finance asks for before it signs off.</div></div>
       <div class="mrow reveal"><div class="req">High-volume outbound, 80+ calls per day</div>
-        <div class="proof">Back-to-back <b>inbound and outbound calls with shareholders of U.S.-listed companies</b>, explaining agendas and deadlines under strict compliance. Call volume and scripts are my everyday work.</div></div>
+        <div class="proof"><b>150–250+ outbound dials and 80–150+ inbound calls a day</b> at MMCY on Five9, PhoneBurner and Zoiper, including calls with shareholders of U.S.-listed companies under strict compliance. 80 a day is a light day for me.</div></div>
       <div class="mrow reveal"><div class="req">Excellent written and verbal English</div>
         <div class="proof"><b>C1 English.</b> Former article writer for a U.S. company, taught IB Computer Science in English, and studied at African Leadership Academy in Johannesburg.</div></div>
       <div class="mrow reveal"><div class="req">CRM and modern sales engagement tools</div>
-        <div class="proof">Every call, email and stage change goes into the CRM. Leadership gets <b>a pipeline it can forecast from</b>. I also use AI tools for account research and personalization.</div></div>
+        <div class="proof"><b>HubSpot and Salesforce</b> for CRM. <b>Five9, PhoneBurner, Freshsales Dialer, Zoiper 5 and Kwality Tel</b> for dialing. Slack, Teams and Microsoft 365 for collaboration, and AI tools for research. Every call gets logged, so leadership has <b>a pipeline it can forecast from</b>.</div></div>
       <div class="mrow reveal"><div class="req">Available for U.S. business hours</div>
         <div class="proof"><b>Yes, full time.</b> I work U.S. hours from Addis Ababa (ET is 7–8 hours behind me).</div></div>
       <div class="mrow nice reveal"><div class="req">Startup / early-stage experience</div>
-        <div class="proof"><b>Co-founded two ventures</b> (events and education consulting). I've done my own selling, marketing and delivery with no playbook, so being the first SDR doesn't scare me.</div></div>
+        <div class="proof">At <b>3BL Studios I was the first sales hire and built the sales department from the ground up</b>: ICP, lead lists, scripts, sequences and CRM pipeline. I've also co-founded two ventures. Being your first SDR is a job I've already done.</div></div>
       <div class="mrow nice reveal"><div class="req">Prospecting into CRO, RevOps, Finance and exec stakeholders</div>
         <div class="proof">I've already mapped those personas, their pains and opening lines. <a href="#playbook" style="color:var(--accent)">See the playbook below ↓</a></div></div>
     </div>
@@ -316,10 +330,10 @@ footer{color:var(--dim);font-size:13px;text-align:center;padding:0 0 40px}
     <span class="eyebrow">Why me as your first SDR</span>
     <h2 class="h2">Four things that set me apart from the other applicants.</h2>
     <div class="why" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
-      <div class="wcard reveal"><div class="ico">📞</div><h3>Phone-first by default</h3><p>The role is mostly calling, and so is my day. I'm comfortable with the dial, the hang-up, and calling the next person straight away.</p></div>
+      <div class="wcard reveal"><div class="ico">📞</div><h3>Phone-first by default</h3><p>150–250+ dials a day is my normal. I'm comfortable with the dial, the hang-up, and calling the next person straight away.</p></div>
       <div class="wcard reveal"><div class="ico">🧠</div><h3>I speak "technical"</h3><p>I code in JavaScript and Python and did IT support. Approval workflows, CRM syncs and pricing logic make sense to me, so I can talk about them credibly with RevOps.</p></div>
       <div class="wcard reveal"><div class="ico">📄</div><h3>I've lived the problem</h3><p>I've built proposals and pricing by hand in docs and spreadsheets. That's the mess your product replaces, and I can describe it from experience.</p></div>
-      <div class="wcard reveal"><div class="ico">🏗️</div><h3>Builder + coachable</h3><p>Two ventures co-founded and years spent teaching. I can build a motion from scratch, and I take call-review feedback and act on it the same day.</p></div>
+      <div class="wcard reveal"><div class="ico">🏗️</div><h3>Builder + coachable</h3><p>I built 3BL Studios' sales department from zero and co-founded two ventures. Years of teaching made me coachable: I act on call-review feedback the same day.</p></div>
     </div>
   </div>
 </section>
@@ -336,7 +350,7 @@ footer{color:var(--dim);font-size:13px;text-align:center;padding:0 0 40px}
       <button class="tab" role="tab" aria-selected="false" data-tab="call">📞 Cold call script</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="obj">🛡️ Objections</button>
       <button class="tab" role="tab" aria-selected="false" data-tab="seq">✉️ Sequence</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="day">⏱️ A day of 80+ dials</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="day">⏱️ A day of 150+ dials</button>
     </div>
 
     <!-- ICP -->
@@ -443,8 +457,8 @@ Samuel</div>
 
     <!-- DAY -->
     <div class="panel" id="p-day" role="tabpanel">
-      <h3>What a day of 80+ dials looks like</h3>
-      <p class="desc">Time-blocked call sessions that follow U.S. time zones: East Coast in the morning, then Central and Pacific later. Addis times update automatically for daylight saving.</p>
+      <h3>What a day of 150+ dials looks like</h3>
+      <p class="desc">Power-dialer sessions (PhoneBurner / Five9) that follow U.S. time zones: East Coast in the morning, then Central and Pacific later. Addis times update automatically for daylight saving.</p>
       <table class="day">
         <thead><tr><th>U.S. Eastern</th><th class="addis">My time</th><th>Block</th><th>Output</th></tr></thead>
         <tbody id="dayRows"></tbody>
@@ -459,13 +473,21 @@ Samuel</div>
     <span class="eyebrow">Track record</span>
     <h2 class="h2">Where I learned to sell.</h2>
     <div class="timeline">
+      <div class="job feature reveal"><div class="when">Jun – Oct 2026<small>Remote · part-time</small></div><div>
+        <h3>Sales Development Representative <span>· 3BL Studios</span></h3>
+        <ul>
+          <li><b>First sales hire. Built the sales department from the ground up:</b> ICP and personas, lead lists, call scripts, email sequences and an objection-handling guide.</li>
+          <li>Set up the <b>CRM pipeline, deal stages and weekly reporting</b> (dials → conversations → meetings) so leadership could forecast from day one.</li>
+          <li>Ran daily outbound calls and email alongside my full-time role, averaging <b>8+ qualified meetings a month</b>.</li>
+        </ul></div></div>
       <div class="job feature reveal"><div class="when">Apr 2024 – Present<small>Addis Ababa · U.S. clients</small></div><div>
         <h3>Business &amp; Sales Development Rep <span>· MMCY Tech</span></h3>
         <ul>
           <li><b>Promoted from SDR</b> within months. I run full-cycle B2B outbound for MMCY's software and IT services, from first touch to close.</li>
           <li>Build <b>tailored demos, proposals and business cases</b> that tie price and scope to each client's goals.</li>
-          <li><b>High-volume inbound and outbound calling</b> with shareholders of U.S.-listed companies, under strict regulatory compliance.</li>
-          <li>Personalized bids on <b>Upwork</b>. Every interaction logged in the <b>CRM</b> for an accurate pipeline.</li>
+          <li><b>150–250+ outbound dials and 80–150+ inbound calls a day</b>, averaging <b>12+ qualified meetings a month</b> (110% of target) and <b>$150K+</b> in qualified pipeline.</li>
+          <li>High-volume calls with shareholders of U.S.-listed companies, under strict regulatory compliance.</li>
+          <li>Personalized bids on <b>Upwork</b> (~20% reply rate). Every interaction logged in the <b>CRM</b> for an accurate pipeline.</li>
         </ul></div></div>
       <div class="job reveal"><div class="when">2023 – 2024<small>Addis Ababa</small></div><div>
         <h3>Assistant Business Developer <span>· EAFMG</span></h3>
@@ -500,10 +522,10 @@ Samuel</div>
         <li>Learn the platform well enough to demo the core flow myself</li>
         <li>Shadow discovery calls; agree ICP and personas with leadership</li>
         <li>Daily role plays; refine opener and objection scripts</li>
-        <li>Ramp from 50 to 80+ dials a day; CRM set up cleanly from day one</li></ul>
+        <li>Up to 150+ dials a day by week two; CRM set up cleanly from day one</li></ul>
         <div class="kpi">Goal: first qualified meetings booked</div></div>
       <div class="phase reveal"><div class="n">60<small>days</small></div><h4>Full velocity</h4><ul>
-        <li>80+ dials a day, plus LinkedIn and email touches</li>
+        <li>150+ dials a day, plus LinkedIn and email touches</li>
         <li>A/B test 2 openers and 2 email angles per persona</li>
         <li>Build an objection library from real call recordings</li>
         <li>Weekly report to leadership: connects → conversations → meetings</li></ul>
@@ -522,6 +544,7 @@ Samuel</div>
 <section class="final" id="contact">
   <div class="wrap">
     <div class="box reveal">
+      <img class="avatar" src="samuel-avatar.jpg" alt="Samuel Erkuye" width="96" height="96">
       <span class="eyebrow">Last step</span>
       <h2>Booking meetings is my job.<br><span class="hl">So let me book this one.</span></h2>
       <p>15 minutes. Run a role play with me, give me your hardest objection, or have me cold call you. I'm ready.</p>
@@ -584,19 +607,19 @@ const CONFIG = {
   let started=false;
   const io0=new IntersectionObserver(e=>{ if(e[0].isIntersecting && !started){ started=true;
     $("#dialBar").style.width="100%"; $("#mtgBar").style.width="72%";
-    let n=0; const t=setInterval(()=>{ n+=2; $("#dialCount").textContent=Math.min(n,84); if(n>=84) clearInterval(t); },22);
+    let n=0; const t=setInterval(()=>{ n+=4; $("#dialCount").textContent=Math.min(n,184); if(n>=184) clearInterval(t); },22);
   }},{threshold:.4});
   io0.observe($(".callcard"));
 
   // Day plan with live Addis conversion
   const blocks=[
     ["08:30","Research & list build: triggers, Sales Navigator, priority accounts","—",0],
-    ["09:00","Power Hour #1: East Coast CROs & RevOps","30 dials",1],
-    ["10:30","Power Hour #2: East + Central","25 dials",1],
+    ["09:00","Power Hour #1: East Coast CROs & RevOps","45 dials",1],
+    ["10:30","Power Hour #2: East + Central","40 dials",1],
     ["11:30","LinkedIn: personalized connects, comments, voice notes","15 touches",0],
     ["12:00","Tailored follow-up emails after live conversations","10 emails",0],
-    ["13:30","Power Hour #3: Central + Mountain","20 dials",1],
-    ["15:00","Power Hour #4: Pacific (West Coast mornings)","15 dials",1],
+    ["13:30","Power Hour #3: Central + Mountain","40 dials",1],
+    ["15:00","Power Hour #4: Pacific (West Coast mornings)","35 dials",1],
     ["16:15","CRM hygiene, call notes, meeting handoffs to leadership","100% logged",0],
     ["16:45","Call review / role play, then build tomorrow's list","coaching",0],
   ];
@@ -613,7 +636,7 @@ const CONFIG = {
   $("#dayRows").innerHTML = blocks.map(([t,what,out,power])=>{
     const d=etToDate(t);
     return `<tr class="${power?"power":""}"><td>${fET12.format(d)}</td><td class="addis">${fME.format(d)}</td><td>${what}</td><td class="dials">${out}</td></tr>`;
-  }).join("") + `<tr><td></td><td class="addis"></td><td style="font-weight:700">Daily total</td><td class="dials" style="font-size:18px">90 dials</td></tr>`;
+  }).join("") + `<tr><td></td><td class="addis"></td><td style="font-weight:700">Daily total</td><td class="dials" style="font-size:18px">160 dials</td></tr>`;
 
   // Tabs
   $$(".tab").forEach(tab=>tab.addEventListener("click",()=>{

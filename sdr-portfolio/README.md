@@ -28,3 +28,6 @@ const CONFIG = {
 ```
 
 Empty values are hidden on the page, so nothing looks broken.
+
+If you name the Vercel project something other than `samuel-erkuye-sdr`, update the `og:image` URL in the
+`<head>` so your photo shows in LinkedIn and Slack link previews.
