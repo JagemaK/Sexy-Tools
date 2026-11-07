@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Downloading stream – Jagema's Downloader</title>
+  <link rel="icon" href="icons/icon32.png">
+  <link rel="stylesheet" href="download.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <img src="icons/icon48.png" alt="" class="logo">
+      <div>
+        <h1>Jagema's Downloader</h1>
+        <div class="sub">Stream downloader</div>
+      </div>
+    </header>
+
+    <section class="panel">
+      <label class="field">
+        <span>File name</span>
+        <div class="name-row">
+          <input id="filename" type="text" spellcheck="false">
+          <span class="ext" id="ext">.mp4</span>
+        </div>
+      </label>
+      <div class="src" id="src"></div>
+
+      <div id="loading" class="status">Reading the stream…</div>
+
+      <div id="options" hidden>
+        <label class="field" id="qualityField" hidden>
+          <span>Quality</span>
+          <select id="quality"></select>
+        </label>
+        <label class="field" id="audioField" hidden>
+          <span>Audio track</span>
+          <select id="audio"></select>
+        </label>
+        <div class="facts" id="facts"></div>
+        <div class="buttons">
+          <button class="btn" id="start">Download</button>
+        </div>
+      </div>
+
+      <div id="progress" hidden>
+        <div class="bar"><div class="fill" id="fill"></div></div>
+        <div class="stats">
+          <span id="pct">0%</span>
+          <span id="detail"></span>
+        </div>
+        <div class="status" id="phase"></div>
+        <div class="buttons">
+          <button class="btn ghost" id="cancel">Cancel</button>
+          <button class="btn" id="stopLive" hidden>Stop &amp; save</button>
+        </div>
+      </div>
+
+      <div id="done" hidden>
+        <div class="ok">✓ Saved</div>
+        <div class="status" id="doneText"></div>
+        <div class="buttons">
+          <button class="btn" id="showFile">Show in folder</button>
+          <button class="btn ghost" id="closeTab">Close</button>
+        </div>
+      </div>
+
+      <div id="error" class="error" hidden></div>
+    </section>
+
+    <p class="hint">Keep this tab open until the file is saved. Streams are downloaded piece by piece and joined into one file on your computer.</p>
+  </div>
+
+  <script src="common.js"></script>
+  <script src="mp4.js"></script>
+  <script src="lib/mux.min.js"></script>
+  <script src="download.js"></script>
+</body>
+</html>

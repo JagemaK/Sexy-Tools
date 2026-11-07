@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "Jagema's Downloader",
+  "version": "1.0.0",
+  "description": "Finds the videos on any web page (MP4, WebM, HLS streams and more) and downloads them in one click.",
+  "permissions": [
+    "downloads",
+    "webRequest",
+    "storage",
+    "scripting",
+    "tabs",
+    "declarativeNetRequestWithHostAccess"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Jagema's Downloader",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
