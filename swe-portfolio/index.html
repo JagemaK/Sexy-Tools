@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Samuel Erkuye — Software Engineer &amp; AI Automation</title>
-<meta name="description" content="Self-taught software engineer and AI automation specialist. 10 projects shipped in 2026: shuttle management with a routing engine, a wallet platform with SMS-verified deposits, real-time multiplayer apps and call-center automation.">
+<meta name="description" content="Self-taught software engineer and AI automation specialist. 10 projects shipped in 2026: shuttle management with a routing engine, an iGaming platform with real-time multiplayer games and SMS-verified deposits, and call-center automation.">
 <meta property="og:title" content="Samuel Erkuye — Software Engineer & AI Automation">
 <meta property="og:description" content="I build software that does the boring work. 10 projects, 550+ commits in 2026.">
 <meta property="og:image" content="https://samuel-erkuye-dev.vercel.app/samuel.jpg">
@@ -195,7 +195,7 @@ footer{text-align:center;color:var(--dim);font:12.5px var(--mono);padding:0 0 40
     <div>
       <span class="pill"><i></i>Open to remote roles · Software Engineer · AI Automation</span>
       <h1>I build software that <span class="grad">does the boring work.</span></h1>
-      <p class="sub">Self-taught full-stack engineer and AI automation specialist. In 2026 I shipped <b>10 projects</b>: a shuttle-management platform with a routing engine and Flutter apps, a wallet platform that <b>verifies deposits from SMS automatically</b>, real-time multiplayer apps, and a browser extension that <b>cut a 15-click call-center workflow to one click</b>.</p>
+      <p class="sub">Self-taught full-stack engineer and AI automation specialist. In 2026 I shipped <b>10 projects</b>: a shuttle-management platform with a routing engine and Flutter apps, an iGaming platform with <b>real-time multiplayer games</b> and deposits <b>verified from SMS automatically</b>, and a browser extension that <b>cut a 15-click call-center workflow to one click</b>.</p>
       <div class="cta">
         <a class="btn btn-primary" href="#projects">See the projects →</a>
         <a class="btn btn-ghost" href="https://github.com/JagemaK" target="_blank" rel="noopener">GitHub ↗</a>
@@ -243,6 +243,7 @@ footer{text-align:center;color:var(--dim);font:12.5px var(--mono);padding:0 0 40
       <button class="chip" aria-pressed="false" data-f="auto">automation</button>
       <button class="chip" aria-pressed="false" data-f="full">full-stack</button>
       <button class="chip" aria-pressed="false" data-f="rt">real-time</button>
+      <button class="chip" aria-pressed="false" data-f="games">games</button>
       <button class="chip" aria-pressed="false" data-f="fin">fintech</button>
       <button class="chip" aria-pressed="false" data-f="mobile">mobile</button>
     </div>
@@ -265,23 +266,23 @@ footer{text-align:center;color:var(--dim);font:12.5px var(--mono);padding:0 0 40
         </ul>
       </article>
 
-      <article class="proj feat rv" data-t="auto full fin mobile">
+
+      <article class="proj feat rv" data-t="auto full rt fin mobile games">
         <div>
-          <div class="top"><span class="tagline">fintech · digital wallet</span><span class="status live">● in production</span></div>
-          <h3>Fyel: Wallet &amp; Gaming Platform</h3>
-          <p class="what">A phone-first digital wallet platform for the Ethiopian market, funded by telebirr and CBE Birr transfers, with 3,000+ third-party titles plugged in through a provider API. Built as a team of two.</p>
-          <div class="metrics"><div><b>90</b>commits</div><div><b>50</b>test files</div><div><b>3,012</b>titles integrated</div></div>
-          <div class="stack"><span>Next.js 16</span><span>React 19</span><span>PostgreSQL</span><span>Prisma 7</span><span>Kotlin</span><span>Telegram Bot API</span><span>Railway</span></div>
+          <div class="top"><span class="tagline">igaming · game development · fintech</span><span class="status live">● in production</span></div>
+          <h3>Gebeta Gaming Platform</h3>
+          <p class="what">My iGaming product line for the Ethiopian market, named after the traditional Ethiopian board game. Phone-first players, one ETB wallet, real-time multiplayer games inside Telegram, and 3,000+ third-party titles, built across four codebases from the wallet core to the game screens.</p>
+          <div class="metrics"><div><b>4</b>codebases</div><div><b>190+</b>commits</div><div><b>130</b>test files</div><div><b>3,000+</b>titles</div><div><b>10</b>in-house games</div></div>
+          <div class="stack"><span>Next.js 16</span><span>React 19</span><span>TypeScript monorepo</span><span>Express</span><span>Socket.io</span><span>PostgreSQL</span><span>Prisma</span><span>Redis</span><span>Kotlin</span><span>Canvas</span><span>Telegram Bot API</span></div>
         </div>
         <ul>
-          <li><b>SMS deposit automation:</b> a Kotlin Android app forwards the agent handset's payment SMS, and the server matches and credits deposits automatically.</li>
-          <li><b>Money you can trust:</b> every balance change is stored with before and after values and exact decimals. Per-wallet row locks stop concurrent double-spends, with tests to prove it.</li>
-          <li><b>Secure integrations:</b> HMAC-SHA256-verified, idempotent provider callbacks. Sessions fail closed, and only hashed tokens are stored.</li>
-          <li><b>Telegram Mini App:</b> one-tap sign-in, phone verification through the bot, and balance and history commands.</li>
-          <li><b>Operations:</b> admin dashboard, payout-agent routing, audit trail, and a self-updating Android app.</li>
+          <li><b>Real-time multiplayer:</b> live rooms on Socket.io with SHA-256 committed (provably fair) draws, automatic win detection, countdown lobbies and refunds.</li>
+          <li><b>Game development:</b> 10 canvas-rendered browser games with a lobby, live chat, sound and per-game RTP (return-to-player) controls, plus a math whitepaper behind the odds.</li>
+          <li><b>Wallet &amp; ledger:</b> append-only double-entry ledger, exact decimal/BigInt money, and per-wallet row locks that stop concurrent double-spends, all proven with tests.</li>
+          <li><b>Payments automation:</b> a Kotlin Android app forwards payment SMS, and the server matches and credits deposits on its own. Payout agents are routed automatically.</li>
+          <li><b>Integrations &amp; security:</b> 3,000+ titles through a game aggregator with HMAC-verified, idempotent callbacks, Telegram Mini App sign-in, JWT rotation with theft detection, and RBAC across player, admin, agent and partner portals.</li>
         </ul>
       </article>
-
       <article class="proj rv" data-t="auto">
         <div class="top"><span class="tagline">browser automation</span><span class="status daily">● used daily at work</span></div>
         <h3>Dialer Assistant</h3>
@@ -296,17 +297,6 @@ footer{text-align:center;color:var(--dim);font:12.5px var(--mono);padding:0 0 40
         <div class="links"><a href="https://github.com/JagemaK/Sexy-Tools/tree/claude/serene-ptolemy-ucm7ij/dialer-assistant" target="_blank" rel="noopener">source ↗</a></div>
       </article>
 
-      <article class="proj rv" data-t="full fin rt">
-        <div class="top"><span class="tagline">platform architecture</span></div>
-        <h3>JAH: High-Concurrency Platform</h3>
-        <p class="what">A TypeScript monorepo with a player site, back office, agent and partner portals, an API and a worker service.</p>
-        <ul style="margin-top:14px">
-          <li>An <b>append-only double-entry ledger</b> with integer (BigInt) money.</li>
-          <li><b>Rotating JWT refresh-token families</b> with theft detection.</li>
-          <li>Redis-backed Socket.io, Zod validation, Pino logging, <b>43 test files</b>.</li>
-        </ul>
-        <div class="stack"><span>pnpm</span><span>Turborepo</span><span>Express</span><span>Prisma</span><span>PostgreSQL</span><span>Redis</span></div>
-      </article>
 
       <article class="proj rv" data-t="full">
         <div class="top"><span class="tagline">edtech · culture</span></div>
@@ -320,33 +310,15 @@ footer{text-align:center;color:var(--dim);font:12.5px var(--mono);padding:0 0 40
         <div class="stack"><span>Next.js 16</span><span>Prisma 7</span><span>Neon Postgres</span><span>Vercel</span></div>
       </article>
 
-      <article class="proj rv" data-t="rt fin">
-        <div class="top"><span class="tagline">real-time multiplayer</span></div>
-        <h3>Live Bingo (Telegram Mini App)</h3>
-        <p class="what">Real-time 75-ball multiplayer rooms inside Telegram, extended from an open-source base.</p>
-        <ul style="margin-top:14px">
-          <li><b>Provably fair:</b> SHA-256 committed draw sequences.</li>
-          <li>Telegram WebApp <b>HMAC login</b>, agent and admin dashboards.</li>
-          <li>Security fixes for agent scoping and payout locks. <b>37 test files</b>.</li>
-        </ul>
-        <div class="stack"><span>React</span><span>Socket.io</span><span>Node.js</span><span>SQLite</span><span>Redis</span></div>
-        <div class="links"><a href="https://github.com/JagemaK/bingo-betting-tma" target="_blank" rel="noopener">source ↗</a></div>
-      </article>
 
-      <article class="proj small rv" data-t="full">
+      <article class="proj rv" data-t="full">
         <div class="top"><span class="tagline">typing app</span></div>
         <h3>DawitType</h3>
         <p class="what">A typing trainer for all 151 Psalms in Amharic and English, with Amharic keyboard mappings, performance charts and synthesized Begena sounds.</p>
         <div class="stack"><span>React</span><span>Vite</span><span>Web Audio</span></div>
         <div class="links"><a href="https://github.com/JagemaK/Mezmur4" target="_blank" rel="noopener">source ↗</a></div>
       </article>
-      <article class="proj small rv" data-t="rt">
-        <div class="top"><span class="tagline">browser games</span></div>
-        <h3>Casino Game Suite</h3>
-        <p class="what">10 canvas-rendered browser games with a lobby, live chat and per-game RTP controls, plus a math whitepaper.</p>
-        <div class="stack"><span>Node.js</span><span>WebSockets</span><span>Canvas</span></div>
-      </article>
-      <article class="proj small rv" data-t="full">
+      <article class="proj rv" data-t="full">
         <div class="top"><span class="tagline">productivity</span></div>
         <h3>Startup Task Tracker</h3>
         <p class="what">A full-stack task manager with Supabase authentication and protected routes.</p>
@@ -447,8 +419,8 @@ const CONFIG = {
     ["4c5205f","derash","feat(auth): sign in with fingerprint or face in both apps"],
     ["4ddfdf6","dialer","Receive caller number from Zoiper via URL hand-off"],
     ["1bd5148","dialer","Add bio and lunch (clock out, auto clock in after N minutes)"],
-    ["bc4e717","bingo","fix(wallet): show approved deposits instantly and never miss them"],
-    ["c1c57ac","jah","feat(web): Lite graphics mode for slow phones"],
+    ["bc4e717","gebeta","fix(wallet): show approved deposits instantly and never miss them"],
+    ["c1c57ac","gebeta","feat(web): Lite graphics mode for slow phones"],
     ["74ab216","tebiban","fix(auth): say why Google sign-in was refused"],
   ];
   const el=$("#term");
