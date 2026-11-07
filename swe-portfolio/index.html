@@ -199,6 +199,7 @@ footer{text-align:center;color:var(--dim);font:12.5px var(--mono);padding:0 0 40
       <div class="cta">
         <a class="btn btn-primary" href="#projects">See the projects →</a>
         <a class="btn btn-ghost" href="https://github.com/JagemaK" target="_blank" rel="noopener">GitHub ↗</a>
+        <a class="btn btn-ghost js-cv" href="#" download style="display:none">Download CV ↓</a>
       </div>
       <div class="stats">
         <div class="stat rv"><strong>10</strong><span>projects shipped in 2026</span></div>
@@ -386,7 +387,7 @@ footer{text-align:center;color:var(--dim);font:12.5px var(--mono);padding:0 0 40
       <p>I'm open to software engineering and AI automation roles, remote, on your hours. Send me the problem and I'll show you how I'd automate it.</p>
       <div class="cta" style="margin-top:28px">
         <a class="btn btn-primary" id="mailBtn" href="mailto:erkuyesamuel@gmail.com?subject=Software%20Engineering%20%2F%20AI%20Automation%20role">Email me →</a>
-        <a class="btn btn-ghost" id="cvBtn" href="#" target="_blank" rel="noopener" style="display:none">Download CV</a>
+        <a class="btn btn-ghost js-cv" href="#" download style="display:none">Download CV ↓</a>
       </div>
       <div class="clinks">
         <a href="mailto:erkuyesamuel@gmail.com">erkuyesamuel@gmail.com</a>
@@ -403,14 +404,14 @@ footer{text-align:center;color:var(--dim);font:12.5px var(--mono);padding:0 0 40
 <script>
 /* ================= EDIT ME ================= */
 const CONFIG = {
-  cvUrl: "",        // e.g. "Samuel-Erkuye-CV.pdf" after copying the PDF into this folder
+  cvUrl: "Samuel-Erkuye-CV.pdf",  // the PDF in this folder; set to "" to hide the buttons
   calendlyUrl: ""   // optional: replaces the Email button
 };
 /* ========================================== */
 (function(){
   const $=(s,e=document)=>e.querySelector(s), $$=(s,e=document)=>[...e.querySelectorAll(s)];
   $("#yr").textContent=new Date().getFullYear();
-  if(CONFIG.cvUrl){const b=$("#cvBtn");b.href=CONFIG.cvUrl;b.style.display="";}
+  if(CONFIG.cvUrl){$$(".js-cv").forEach(b=>{b.href=CONFIG.cvUrl;b.style.display="";});}
   if(CONFIG.calendlyUrl){const b=$("#mailBtn");b.href=CONFIG.calendlyUrl;b.target="_blank";b.textContent="Book a call →";}
 
   // Terminal: real commit messages from Samuel's repositories

@@ -12,3 +12,6 @@ If you pick another name, update the `og:image` URL in `<head>` and the portfoli
 
 ## Personalize
 At the top of the `<script>`: `cvUrl` (copy the PDF into this folder) and an optional `calendlyUrl`.
+
+## CV download
+`Samuel-Erkuye-CV.pdf` in this folder is what the "Download CV" buttons serve. If you edit the CV, re-export the PDF and copy it over this file.
