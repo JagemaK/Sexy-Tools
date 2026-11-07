@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Samuel Erkuye — Software Engineer &amp; AI Automation</title>
+<meta name="description" content="Self-taught software engineer and AI automation specialist. 10 projects shipped in 2026: shuttle management with a routing engine, a wallet platform with SMS-verified deposits, real-time multiplayer apps and call-center automation.">
+<meta property="og:title" content="Samuel Erkuye — Software Engineer & AI Automation">
+<meta property="og:description" content="I build software that does the boring work. 10 projects, 550+ commits in 2026.">
+<meta property="og:image" content="https://samuel-erkuye-dev.vercel.app/samuel.jpg">
+<meta name="theme-color" content="#07090f">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2307090f'/><text x='50' y='64' font-size='46' font-family='monospace' font-weight='700' text-anchor='middle' fill='%2322d3ee'>&gt;_</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090f; --bg2:#0b0f1a; --card:#0f1422; --card2:#131a2c; --line:#1e2740; --line2:#2a3556;
+  --text:#e8ecf6; --muted:#97a1bb; --dim:#626d89;
+  --cyan:#22d3ee; --violet:#a78bfa; --green:#4ade80; --amber:#fbbf24; --pink:#f472b6;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --max:1140px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font:16px/1.6 Inter,system-ui,-apple-system,Segoe UI,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;background-image:radial-gradient(rgba(148,163,184,.09) 1px,transparent 1px);background-size:26px 26px;pointer-events:none;z-index:0}
+main,nav,footer{position:relative;z-index:1}
+h1,h2,h3,h4{line-height:1.12;letter-spacing:-.025em}
+a{color:inherit}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 20px}
+section{padding:90px 0}
+.mono{font-family:var(--mono)}
+.kicker{font:500 13px var(--mono);color:var(--cyan);letter-spacing:.02em}
+.kicker::before{content:"// "}
+.h2{font-size:clamp(30px,4.4vw,46px);font-weight:800;margin:12px 0 14px}
+.lead{color:var(--muted);font-size:18px;max-width:700px}
+.grad{background:linear-gradient(92deg,var(--cyan),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:12px;font-weight:600;text-decoration:none;font-size:15px;border:1px solid transparent;transition:transform .15s,border-color .15s,box-shadow .15s}
+.btn-primary{background:linear-gradient(92deg,var(--cyan),var(--violet));color:#07090f;box-shadow:0 12px 34px -14px rgba(34,211,238,.7)}
+.btn-primary:hover{transform:translateY(-2px)}
+.btn-ghost{border-color:var(--line2);background:rgba(255,255,255,.02)}
+.btn-ghost:hover{border-color:var(--muted)}
+
+nav{position:sticky;top:0;z-index:50;background:rgba(7,9,15,.8);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:62px;gap:14px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font:600 14px var(--mono)}
+.brand img{width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid var(--cyan)}
+.brand span{color:var(--dim)}
+.navlinks{display:flex;gap:24px;font-size:14px;color:var(--muted)}
+.navlinks a{text-decoration:none}.navlinks a:hover{color:var(--text)}
+nav .btn{padding:9px 16px;font-size:14px}
+@media(max-width:880px){.navlinks{display:none}}
+@media(max-width:420px){.brand{font-size:13px}.brand span{display:none}}
+
+/* hero */
+.hero{padding:70px 0 70px}
+.hero-grid{display:grid;grid-template-columns:1.15fr .95fr;gap:52px;align-items:center}
+@media(max-width:980px){.hero-grid{grid-template-columns:1fr}}
+.pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line2);background:var(--card);border-radius:999px;padding:6px 14px;font:500 13px var(--mono);color:var(--muted)}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
+.hero h1{font-size:clamp(40px,6.2vw,72px);font-weight:800;margin:22px 0 20px}
+.hero .sub{font-size:19px;color:var(--muted);max-width:600px}
+.hero .sub b{color:var(--text);font-weight:600}
+.cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:40px}
+@media(max-width:600px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{border:1px solid var(--line);background:var(--card);border-radius:14px;padding:14px 16px}
+.stat strong{display:block;font:700 26px var(--mono);color:var(--text)}
+.stat span{font-size:13px;color:var(--muted)}
+
+.side{position:relative}
+.photo{border-radius:22px;overflow:hidden;border:1px solid var(--line2);height:400px;position:relative}
+.photo img{width:100%;height:100%;object-fit:cover;object-position:50% 26%;display:block}
+.photo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(7,9,15,.9))}
+.term{position:relative;z-index:2;margin:-110px 18px 0;background:#0a0e18;border:1px solid var(--line2);border-radius:14px;box-shadow:0 30px 70px -30px rgba(0,0,0,.9);overflow:hidden}
+.term .bar{display:flex;align-items:center;gap:7px;padding:10px 14px;background:#0f1422;border-bottom:1px solid var(--line)}
+.term .bar i{width:11px;height:11px;border-radius:50%;background:#ff5f57}.term .bar i:nth-child(2){background:#febc2e}.term .bar i:nth-child(3){background:#28c840}
+.term .bar span{margin-left:8px;font:12px var(--mono);color:var(--dim)}
+.term pre{font:12.5px/1.75 var(--mono);padding:14px 16px;min-height:212px;white-space:pre-wrap;word-break:break-word;color:#cbd5e1}
+.term .p{color:var(--green)}.term .h{color:var(--amber)}.term .r{color:var(--violet)}
+.cursor{display:inline-block;width:8px;height:15px;background:var(--cyan);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+@media(max-width:600px){.photo{height:360px}.term{margin:-80px 6px 0}.term pre{font-size:11.5px;min-height:230px}}
+
+/* automate */
+.auto{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:40px}
+@media(max-width:980px){.auto{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.auto{grid-template-columns:1fr}}
+.acard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;transition:border-color .2s,transform .2s}
+.acard:hover{border-color:rgba(34,211,238,.45);transform:translateY(-3px)}
+.acard .ic{font:700 13px var(--mono);color:var(--cyan);background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.2);display:inline-block;padding:4px 10px;border-radius:8px;margin-bottom:14px}
+.acard h3{font-size:19px;margin-bottom:8px}
+.acard p{font-size:14.5px;color:var(--muted)}
+.acard .before{margin-top:14px;font:12.5px var(--mono);color:var(--dim);border-top:1px dashed var(--line2);padding-top:12px}
+.acard .before b{color:var(--green);font-weight:500}
+
+/* projects */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:34px 0 22px}
+.chip{font:500 13px var(--mono);border:1px solid var(--line2);background:var(--card);color:var(--muted);padding:8px 14px;border-radius:10px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
+.projects{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+.proj{grid-column:span 3;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:26px;display:flex;flex-direction:column;transition:border-color .2s}
+.proj:hover{border-color:var(--line2)}
+.proj.feat{grid-column:span 6;display:grid;grid-template-columns:1.1fr 1fr;gap:30px;background:linear-gradient(150deg,#121a2e,var(--card) 60%)}
+.proj.small{grid-column:span 2}
+@media(max-width:980px){.proj,.proj.small{grid-column:span 3}.proj.feat{grid-template-columns:1fr}}
+@media(max-width:680px){.proj,.proj.small,.proj.feat{grid-column:span 6}}
+.proj.hide{display:none}
+.proj .top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.tagline{font:500 12px var(--mono);color:var(--violet)}
+.status{font:500 11.5px var(--mono);padding:3px 9px;border-radius:99px;border:1px solid}
+.status.live{color:var(--green);border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.07)}
+.status.pilot{color:var(--amber);border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.07)}
+.status.daily{color:var(--cyan);border-color:rgba(34,211,238,.35);background:rgba(34,211,238,.07)}
+.proj h3{font-size:24px;font-weight:800;margin-bottom:8px}
+.proj.small h3{font-size:19px}
+.proj .what{color:var(--muted);font-size:15px}
+.proj ul{list-style:none;display:grid;gap:9px;margin-top:4px}
+.proj li{font-size:14.5px;color:#c9d1e3;padding-left:20px;position:relative}
+.proj li::before{content:"▸";position:absolute;left:0;color:var(--cyan)}
+.proj li b{color:var(--text);font-weight:600}
+.stack{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:18px}
+.stack span{font:500 11.5px var(--mono);color:var(--muted);background:var(--bg2);border:1px solid var(--line);padding:3px 8px;border-radius:6px}
+.metrics{display:flex;gap:18px;flex-wrap:wrap;margin:16px 0 4px}
+.metrics div{font:12px var(--mono);color:var(--dim)}
+.metrics b{display:block;font:700 20px var(--mono);color:var(--text)}
+.links{display:flex;gap:14px;margin-top:14px;font:500 13px var(--mono)}
+.links a{color:var(--cyan);text-decoration:none}.links a:hover{text-decoration:underline}
+
+/* AI workflow */
+.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:40px;border:1px solid var(--line);border-radius:20px;overflow:hidden;background:var(--card)}
+@media(max-width:900px){.flow{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.flow{grid-template-columns:1fr}}
+.step{padding:26px;border-right:1px solid var(--line);position:relative}
+.step:last-child{border-right:0}
+@media(max-width:900px){.step{border-bottom:1px solid var(--line)}.step:nth-child(2n){border-right:0}}
+.step .n{font:700 13px var(--mono);color:var(--violet)}
+.step h4{font-size:18px;margin:8px 0}
+.step p{font-size:14.5px;color:var(--muted)}
+.quote{margin-top:22px;border-left:3px solid var(--violet);padding:4px 0 4px 18px;color:var(--muted);font-size:16px;max-width:820px}
+.quote b{color:var(--text)}
+
+/* stack grid */
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:36px}
+@media(max-width:900px){.sgrid{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.sgrid{grid-template-columns:1fr}}
+.sbox{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
+.sbox h4{font:600 13px var(--mono);color:var(--cyan);margin-bottom:12px}
+.sbox div{display:flex;flex-wrap:wrap;gap:6px}
+.sbox span{font-size:13.5px;background:var(--bg2);border:1px solid var(--line);padding:4px 10px;border-radius:8px}
+
+/* timeline */
+.tl{margin-top:36px;display:grid;gap:12px}
+.ti{display:grid;grid-template-columns:170px 1fr;gap:22px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 22px}
+@media(max-width:680px){.ti{grid-template-columns:1fr;gap:6px}}
+.ti .when{font:500 13px var(--mono);color:var(--cyan)}
+.ti h4{font-size:17px}.ti h4 span{color:var(--muted);font-weight:500}
+.ti p{color:var(--muted);font-size:14.5px;margin-top:4px}
+
+/* contact */
+.contact{text-align:center}
+.cbox{border:1px solid var(--line2);border-radius:28px;padding:60px 22px;background:radial-gradient(ellipse at top,rgba(167,139,250,.16),transparent 60%),var(--card)}
+.cbox img{width:92px;height:92px;border-radius:50%;object-fit:cover;border:3px solid var(--cyan);margin-bottom:18px}
+.cbox h2{font-size:clamp(32px,5vw,56px);font-weight:800;max-width:780px;margin:12px auto 16px}
+.cbox p{color:var(--muted);max-width:560px;margin:0 auto;font-size:17px}
+.cbox .cta{justify-content:center}
+.clinks{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-top:24px;font:14px var(--mono);color:var(--muted)}
+.clinks a{text-decoration:none;border-bottom:1px solid var(--line2)}.clinks a:hover{color:var(--text)}
+footer{text-align:center;color:var(--dim);font:12.5px var(--mono);padding:0 0 40px}
+
+.rv{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
+.rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="samuel-avatar.jpg" alt="" width="30" height="30">samuel<span>@erkuye:~$</span></a>
+    <div class="navlinks">
+      <a href="#automation">Automation</a>
+      <a href="#projects">Projects</a>
+      <a href="#ai">How I build</a>
+      <a href="#stack">Stack</a>
+      <a href="#experience">Experience</a>
+    </div>
+    <a class="btn btn-primary" href="#contact">Hire me</a>
+  </div>
+</nav>
+
+<main>
+<header class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="pill"><i></i>Open to remote roles · Software Engineer · AI Automation</span>
+      <h1>I build software that <span class="grad">does the boring work.</span></h1>
+      <p class="sub">Self-taught full-stack engineer and AI automation specialist. In 2026 I shipped <b>10 projects</b>: a shuttle-management platform with a routing engine and Flutter apps, a wallet platform that <b>verifies deposits from SMS automatically</b>, real-time multiplayer apps, and a browser extension that <b>cut a 15-click call-center workflow to one click</b>.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="#projects">See the projects →</a>
+        <a class="btn btn-ghost" href="https://github.com/JagemaK" target="_blank" rel="noopener">GitHub ↗</a>
+      </div>
+      <div class="stats">
+        <div class="stat rv"><strong>10</strong><span>projects shipped in 2026</span></div>
+        <div class="stat rv"><strong>550+</strong><span>commits</span></div>
+        <div class="stat rv"><strong>175+</strong><span>test files</span></div>
+        <div class="stat rv"><strong>EN·አማ</strong><span>bilingual products</span></div>
+      </div>
+    </div>
+    <div class="side rv">
+      <div class="photo"><img src="samuel.jpg" alt="Samuel Erkuye" width="720" height="960"></div>
+      <div class="term" aria-label="Recent commits from Samuel's repositories">
+        <div class="bar"><i></i><i></i><i></i><span>~/projects — git log</span></div>
+        <pre id="term"></pre>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- AUTOMATION -->
+<section id="automation" style="padding-top:40px">
+  <div class="wrap">
+    <span class="kicker">automation</span>
+    <h2 class="h2">If a person does it the same way twice, I automate it.</h2>
+    <p class="lead">Every project below started as someone doing tedious work by hand. These are the automations running in them today.</p>
+    <div class="auto">
+      <div class="acard rv"><span class="ic">browser</span><h3>Call-center autopilot</h3><p>An Edge extension reads the caller's number from the softphone, finds their record in a spreadsheet, and runs a three-pass disposition workflow on the dialer site.</p><div class="before">before: ~15 clicks + a lookup<br><b>after: 1 click</b></div></div>
+      <div class="acard rv"><span class="ic">sms → api</span><h3>Self-verifying payments</h3><p>A Kotlin Android app forwards payment SMS to the server, which matches transaction ID, account and amount, then credits the wallet on its own.</p><div class="before">before: a human checks every deposit<br><b>after: only mismatches reach a human</b></div></div>
+      <div class="acard rv"><span class="ic">scheduler</span><h3>Shift-end autopilot</h3><p>At T-60 / T-15 / T-5 the system plans routes, asks riders to confirm, assigns vehicles and notifies people through push, then Telegram, then SMS.</p><div class="before">before: dispatchers on phones<br><b>after: approve or let it run</b></div></div>
+      <div class="acard rv"><span class="ic">bots</span><h3>Telegram bots &amp; Mini Apps</h3><p>Phone verification, one-tap sign-in, balance and ride lookups, and status alerts, all inside the messenger people already use.</p><div class="before">before: support messages<br><b>after: self-serve in chat</b></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects" style="padding-top:20px">
+  <div class="wrap">
+    <span class="kicker">projects</span>
+    <h2 class="h2">Things I've built and shipped.</h2>
+    <p class="lead">Real systems with real users, tests and documentation. Each one is designed, built and deployed end to end.</p>
+    <div class="filters" role="group" aria-label="Filter projects">
+      <button class="chip" aria-pressed="true" data-f="all">all</button>
+      <button class="chip" aria-pressed="false" data-f="auto">automation</button>
+      <button class="chip" aria-pressed="false" data-f="full">full-stack</button>
+      <button class="chip" aria-pressed="false" data-f="rt">real-time</button>
+      <button class="chip" aria-pressed="false" data-f="fin">fintech</button>
+      <button class="chip" aria-pressed="false" data-f="mobile">mobile</button>
+    </div>
+
+    <div class="projects">
+      <article class="proj feat rv" data-t="auto full rt mobile">
+        <div>
+          <div class="top"><span class="tagline">enterprise · logistics</span><span class="status pilot">● built for MMCY pilot</span></div>
+          <h3>Derash: Shuttle Management System</h3>
+          <p class="what">Employees who work late shifts need to know exactly when and where their ride home is. Derash plans, dispatches and tracks the company's shuttles: a dispatcher dashboard, rider and driver apps, and a provider console.</p>
+          <div class="metrics"><div><b>284</b>commits</div><div><b>49</b>test files</div><div><b>4</b>apps</div><div><b>2</b>languages</div></div>
+          <div class="stack"><span>TypeScript</span><span>Express 5</span><span>PostgreSQL + PostGIS</span><span>Redis · BullMQ</span><span>Socket.io</span><span>React PWA</span><span>Flutter</span><span>OpenAPI</span></div>
+        </div>
+        <ul>
+          <li><b>Assignment engine:</b> k-means zone clustering, smallest-vehicle fit, trip consolidation, and nearest-neighbour + 2-opt routing with a night-safety rule.</li>
+          <li><b>Incremental re-planning:</b> driver absent or vehicle down? It proposes a swap, nearby seats or a spare in milliseconds. Only the affected riders change.</li>
+          <li><b>Autopilot:</b> a T-60/T-15/T-5 scheduler and a push → Telegram → SMS cascade with delivery receipts.</li>
+          <li><b>Live ops:</b> GPS tracking every 10 s over Socket.io, SOS, boarding and no-show tracking, and GPS-verified provider statements.</li>
+          <li><b>Production API:</b> multi-tenant with row-level security, rotating refresh tokens, audit log, idempotency keys and rate limits. Flutter apps for Android and iOS on a shared core.</li>
+        </ul>
+      </article>
+
+      <article class="proj feat rv" data-t="auto full fin mobile">
+        <div>
+          <div class="top"><span class="tagline">fintech · digital wallet</span><span class="status live">● in production</span></div>
+          <h3>Fyel: Wallet &amp; Gaming Platform</h3>
+          <p class="what">A phone-first digital wallet platform for the Ethiopian market, funded by telebirr and CBE Birr transfers, with 3,000+ third-party titles plugged in through a provider API. Built as a team of two.</p>
+          <div class="metrics"><div><b>90</b>commits</div><div><b>50</b>test files</div><div><b>3,012</b>titles integrated</div></div>
+          <div class="stack"><span>Next.js 16</span><span>React 19</span><span>PostgreSQL</span><span>Prisma 7</span><span>Kotlin</span><span>Telegram Bot API</span><span>Railway</span></div>
+        </div>
+        <ul>
+          <li><b>SMS deposit automation:</b> a Kotlin Android app forwards the agent handset's payment SMS, and the server matches and credits deposits automatically.</li>
+          <li><b>Money you can trust:</b> every balance change is stored with before and after values and exact decimals. Per-wallet row locks stop concurrent double-spends, with tests to prove it.</li>
+          <li><b>Secure integrations:</b> HMAC-SHA256-verified, idempotent provider callbacks. Sessions fail closed, and only hashed tokens are stored.</li>
+          <li><b>Telegram Mini App:</b> one-tap sign-in, phone verification through the bot, and balance and history commands.</li>
+          <li><b>Operations:</b> admin dashboard, payout-agent routing, audit trail, and a self-updating Android app.</li>
+        </ul>
+      </article>
+
+      <article class="proj rv" data-t="auto">
+        <div class="top"><span class="tagline">browser automation</span><span class="status daily">● used daily at work</span></div>
+        <h3>Dialer Assistant</h3>
+        <p class="what">An Edge/Chrome extension I built at MMCY Tech to take the repetitive clicking out of shareholder calls.</p>
+        <ul style="margin-top:14px">
+          <li>Imports an Excel file, then looks up the <b>phone → control number</b> instantly.</li>
+          <li><b>Zoiper softphone hand-off:</b> the caller's number arrives with no copy and paste.</li>
+          <li>Runs a <b>3-pass disposition workflow</b> on its own, with a live checklist.</li>
+          <li>Automates breaks and clock in/out, and keeps working with the screen locked.</li>
+        </ul>
+        <div class="stack"><span>JavaScript</span><span>Manifest V3</span><span>SheetJS</span><span>Alarms API</span></div>
+        <div class="links"><a href="https://github.com/JagemaK/Sexy-Tools/tree/claude/serene-ptolemy-ucm7ij/dialer-assistant" target="_blank" rel="noopener">source ↗</a></div>
+      </article>
+
+      <article class="proj rv" data-t="full fin rt">
+        <div class="top"><span class="tagline">platform architecture</span></div>
+        <h3>JAH: High-Concurrency Platform</h3>
+        <p class="what">A TypeScript monorepo with a player site, back office, agent and partner portals, an API and a worker service.</p>
+        <ul style="margin-top:14px">
+          <li>An <b>append-only double-entry ledger</b> with integer (BigInt) money.</li>
+          <li><b>Rotating JWT refresh-token families</b> with theft detection.</li>
+          <li>Redis-backed Socket.io, Zod validation, Pino logging, <b>43 test files</b>.</li>
+        </ul>
+        <div class="stack"><span>pnpm</span><span>Turborepo</span><span>Express</span><span>Prisma</span><span>PostgreSQL</span><span>Redis</span></div>
+      </article>
+
+      <article class="proj rv" data-t="full">
+        <div class="top"><span class="tagline">edtech · culture</span></div>
+        <h3>Tebiban School</h3>
+        <p class="what">An e-learning platform preserving Ethiopian musical heritage (Begena, Kirar, Masinko, Washint), in English and Amharic.</p>
+        <ul style="margin-top:14px">
+          <li>Migrated <b>Supabase → Prisma</b> with server-first data access.</li>
+          <li>Self-hosted auth: Argon2id, signed httpOnly sessions, Google sign-in, Resend email.</li>
+          <li>Fixed <b>7 security issues</b>, including a committed service key and an admin-escalation path.</li>
+        </ul>
+        <div class="stack"><span>Next.js 16</span><span>Prisma 7</span><span>Neon Postgres</span><span>Vercel</span></div>
+      </article>
+
+      <article class="proj rv" data-t="rt fin">
+        <div class="top"><span class="tagline">real-time multiplayer</span></div>
+        <h3>Live Bingo (Telegram Mini App)</h3>
+        <p class="what">Real-time 75-ball multiplayer rooms inside Telegram, extended from an open-source base.</p>
+        <ul style="margin-top:14px">
+          <li><b>Provably fair:</b> SHA-256 committed draw sequences.</li>
+          <li>Telegram WebApp <b>HMAC login</b>, agent and admin dashboards.</li>
+          <li>Security fixes for agent scoping and payout locks. <b>37 test files</b>.</li>
+        </ul>
+        <div class="stack"><span>React</span><span>Socket.io</span><span>Node.js</span><span>SQLite</span><span>Redis</span></div>
+        <div class="links"><a href="https://github.com/JagemaK/bingo-betting-tma" target="_blank" rel="noopener">source ↗</a></div>
+      </article>
+
+      <article class="proj small rv" data-t="full">
+        <div class="top"><span class="tagline">typing app</span></div>
+        <h3>DawitType</h3>
+        <p class="what">A typing trainer for all 151 Psalms in Amharic and English, with Amharic keyboard mappings, performance charts and synthesized Begena sounds.</p>
+        <div class="stack"><span>React</span><span>Vite</span><span>Web Audio</span></div>
+        <div class="links"><a href="https://github.com/JagemaK/Mezmur4" target="_blank" rel="noopener">source ↗</a></div>
+      </article>
+      <article class="proj small rv" data-t="rt">
+        <div class="top"><span class="tagline">browser games</span></div>
+        <h3>Casino Game Suite</h3>
+        <p class="what">10 canvas-rendered browser games with a lobby, live chat and per-game RTP controls, plus a math whitepaper.</p>
+        <div class="stack"><span>Node.js</span><span>WebSockets</span><span>Canvas</span></div>
+      </article>
+      <article class="proj small rv" data-t="full">
+        <div class="top"><span class="tagline">productivity</span></div>
+        <h3>Startup Task Tracker</h3>
+        <p class="what">A full-stack task manager with Supabase authentication and protected routes.</p>
+        <div class="stack"><span>Next.js</span><span>Supabase</span><span>Tailwind</span></div>
+        <div class="links"><a href="https://github.com/JagemaK/startup-task-tracker" target="_blank" rel="noopener">source ↗</a></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- AI -->
+<section id="ai" style="background:linear-gradient(180deg,transparent,var(--bg2) 30%,var(--bg2) 70%,transparent)">
+  <div class="wrap">
+    <span class="kicker">ai-native engineering</span>
+    <h2 class="h2">I ship like a team, because I work with AI.</h2>
+    <p class="lead">I treat AI coding agents (Claude Code, ChatGPT) like fast junior engineers. I set the direction, they draft, I review and verify. That's how one self-taught developer ships 10 projects in a year without cutting corners.</p>
+    <div class="flow">
+      <div class="step rv"><span class="n">01 / spec</span><h4>Write it down first</h4><p>Product spec, data model and a "what's real and what isn't" table before any code, so agents build the right thing.</p></div>
+      <div class="step rv"><span class="n">02 / direct</span><h4>Small, reviewable steps</h4><p>One focused change per commit. I read every diff, push back, and keep the architecture in my head, not the agent's.</p></div>
+      <div class="step rv"><span class="n">03 / verify</span><h4>Prove it works</h4><p>Unit, integration and concurrency tests, type checks, and real-browser checks. 175+ test files across my repos.</p></div>
+      <div class="step rv"><span class="n">04 / ship</span><h4>Deploy &amp; document</h4><p>Vercel, Railway and Render pipelines with migrations on deploy, plus READMEs a new teammate can run in 5 minutes.</p></div>
+    </div>
+    <p class="quote">My git history is open about it: many commits are co-authored with Claude. <b>The skill isn't typing code. It's knowing what to build, breaking it down, and catching what's wrong.</b> I bring that from running real operations, not just tutorials.</p>
+  </div>
+</section>
+
+<!-- STACK -->
+<section id="stack">
+  <div class="wrap">
+    <span class="kicker">stack</span>
+    <h2 class="h2">Tools I use in production.</h2>
+    <div class="sgrid">
+      <div class="sbox rv"><h4>languages</h4><div><span>TypeScript</span><span>JavaScript</span><span>Python</span><span>SQL</span><span>Dart</span><span>Kotlin</span><span>HTML/CSS</span></div></div>
+      <div class="sbox rv"><h4>frontend &amp; mobile</h4><div><span>React 19</span><span>Next.js 16</span><span>Vite</span><span>Tailwind</span><span>PWA</span><span>Flutter</span><span>Telegram Mini Apps</span></div></div>
+      <div class="sbox rv"><h4>backend &amp; data</h4><div><span>Node.js</span><span>Express 5</span><span>Socket.io</span><span>Prisma</span><span>PostgreSQL/PostGIS</span><span>SQLite</span><span>Redis</span><span>BullMQ</span><span>S3</span></div></div>
+      <div class="sbox rv"><h4>ai &amp; automation</h4><div><span>Claude Code</span><span>ChatGPT</span><span>Prompt engineering</span><span>Browser extensions</span><span>Telegram bots</span><span>Schedulers &amp; queues</span><span>SMS/webhook pipelines</span><span>Excel/CSV pipelines</span></div></div>
+      <div class="sbox rv"><h4>security</h4><div><span>Argon2id</span><span>JWT rotation</span><span>HMAC webhooks</span><span>RBAC</span><span>Row-level security</span><span>OTP login</span><span>Rate limiting</span></div></div>
+      <div class="sbox rv"><h4>delivery</h4><div><span>Git/GitHub</span><span>Vitest</span><span>ESLint</span><span>Docker Compose</span><span>Vercel</span><span>Railway</span><span>Render</span><span>Neon</span><span>Cloudflare Tunnels</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section id="experience" style="padding-top:20px">
+  <div class="wrap">
+    <span class="kicker">experience</span>
+    <h2 class="h2">Self-taught, and close to the business.</h2>
+    <p class="lead">I learned to code by building, and I learned what to build by working in sales, operations and IT. That's why my software solves the problem people actually have.</p>
+    <div class="tl">
+      <div class="ti rv"><div class="when">2024 → now</div><div><h4>Business &amp; Sales Development <span>· MMCY Tech</span></h4><p>Built the Dialer Assistant for my team, and proposed and prototyped the Derash shuttle platform for the company's employee transport. Also run B2B outbound for MMCY's software and IT services.</p></div></div>
+      <div class="ti rv"><div class="when">2026</div><div><h4>Sales Development (part-time) <span>· 3BL Studios</span></h4><p>First sales hire. Built the sales function from scratch and automated its busywork: lead lists, CRM workflows, follow-ups and reporting.</p></div></div>
+      <div class="ti rv"><div class="when">2022 → 2023</div><div><h4>IB Computer Science TA &amp; Tech Support <span>· SOS HGIC, Ghana</span></h4><p>Taught programming, ran the Programming &amp; Robotics Club, and maintained servers, the LAN and AV systems.</p></div></div>
+      <div class="ti rv"><div class="when">2020 → 2022</div><div><h4>African Leadership Academy <span>· Johannesburg</span></h4><p>Advanced Diploma. CFO and AV production manager of a student enterprise, and director of tech &amp; entrepreneurship camps in three Ethiopian cities.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact" id="contact">
+  <div class="wrap">
+    <div class="cbox rv">
+      <img src="samuel-avatar.jpg" alt="Samuel Erkuye" width="92" height="92">
+      <span class="kicker">contact</span>
+      <h2>Got manual work that should be <span class="grad">running itself?</span></h2>
+      <p>I'm open to software engineering and AI automation roles, remote, on your hours. Send me the problem and I'll show you how I'd automate it.</p>
+      <div class="cta" style="margin-top:28px">
+        <a class="btn btn-primary" id="mailBtn" href="mailto:erkuyesamuel@gmail.com?subject=Software%20Engineering%20%2F%20AI%20Automation%20role">Email me →</a>
+        <a class="btn btn-ghost" id="cvBtn" href="#" target="_blank" rel="noopener" style="display:none">Download CV</a>
+      </div>
+      <div class="clinks">
+        <a href="mailto:erkuyesamuel@gmail.com">erkuyesamuel@gmail.com</a>
+        <a href="https://github.com/JagemaK" target="_blank" rel="noopener">github.com/JagemaK</a>
+        <a href="https://www.linkedin.com/in/samuel-m-erkuye-406007214" target="_blank" rel="noopener">LinkedIn</a>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>© <span id="yr"></span> Samuel Mekonnen Erkuye · built by hand, verified by tests</footer>
+
+<script>
+/* ================= EDIT ME ================= */
+const CONFIG = {
+  cvUrl: "",        // e.g. "Samuel-Erkuye-CV.pdf" after copying the PDF into this folder
+  calendlyUrl: ""   // optional: replaces the Email button
+};
+/* ========================================== */
+(function(){
+  const $=(s,e=document)=>e.querySelector(s), $$=(s,e=document)=>[...e.querySelectorAll(s)];
+  $("#yr").textContent=new Date().getFullYear();
+  if(CONFIG.cvUrl){const b=$("#cvBtn");b.href=CONFIG.cvUrl;b.style.display="";}
+  if(CONFIG.calendlyUrl){const b=$("#mailBtn");b.href=CONFIG.calendlyUrl;b.target="_blank";b.textContent="Book a call →";}
+
+  // Terminal: real commit messages from Samuel's repositories
+  const lines=[
+    ["33d025d","derash","feat(runs): a shift belongs to the calendar day it ends on"],
+    ["4c5205f","derash","feat(auth): sign in with fingerprint or face in both apps"],
+    ["4ddfdf6","dialer","Receive caller number from Zoiper via URL hand-off"],
+    ["1bd5148","dialer","Add bio and lunch (clock out, auto clock in after N minutes)"],
+    ["bc4e717","bingo","fix(wallet): show approved deposits instantly and never miss them"],
+    ["c1c57ac","jah","feat(web): Lite graphics mode for slow phones"],
+    ["74ab216","tebiban","fix(auth): say why Google sign-in was refused"],
+  ];
+  const el=$("#term");
+  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+  const full=lines.map(([h,r,m])=>`<span class="h">${h}</span> <span class="r">(${r})</span> ${esc(m)}`);
+  const head='<span class="p">$</span> git log --oneline  # across my repos\n';
+  if(reduce){el.innerHTML=head+full.join("\n");}
+  else{
+    let i=0; el.innerHTML=head+'<span class="cursor"></span>';
+    const tick=()=>{ if(i>=full.length) return; el.innerHTML=head+full.slice(0,++i).join("\n")+'\n<span class="cursor"></span>'; setTimeout(tick,520); };
+    setTimeout(tick,700);
+  }
+
+  // Filters
+  $$(".chip").forEach(c=>c.addEventListener("click",()=>{
+    $$(".chip").forEach(x=>x.setAttribute("aria-pressed",x===c));
+    const f=c.dataset.f;
+    $$(".proj").forEach(p=>p.classList.toggle("hide", f!=="all" && !p.dataset.t.split(" ").includes(f)));
+  }));
+
+  // Reveal
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}}),{threshold:.1});
+  $$(".rv").forEach(x=>io.observe(x));
+})();
+</script>
+</body>
+</html>
